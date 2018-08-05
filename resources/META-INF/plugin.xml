@@ -20,12 +20,12 @@
 
   <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
        on how to target different products -->
-  <!-- uncomment to enable plugin in all products
   <depends>com.intellij.modules.lang</depends>
-  -->
 
   <extensions defaultExtensionNs="com.intellij">
-    <toolWindow id="My Sample Tool Window" icon="alien.png" anchor="top" factoryClass="MainWindow">
+    <!-- todo: a pretty icon needed -->
+    <fileIconProvider implementation="IconProvider"/>
+    <toolWindow id="MyBitbucket" anchor="bottom" factoryClass="MainWindow">
 
     </toolWindow>
   </extensions>
