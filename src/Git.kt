@@ -46,8 +46,9 @@ object Git: VCS {
         val baseDir = prj?.baseDir
         if (prj != null && baseDir != null) {
             val vcs = VcsUtil.getVcsFor(prj, baseDir)
-            //todo: vcs has class GitVcs, although it is a different GitVcs class that we expected.
-            //2 different plugins' classloaders might loaded GitVsc two times???
+            //Initial problem: git4idea.GitVcs cannot be cast to git4idea.GitVcs
+            //Lessons learned: do not add runtime dependencies for a module if it is a plugin.
+            //Use plugin.xml to describe them
             if (vcs is GitVcs)
                 return vcs
         }
