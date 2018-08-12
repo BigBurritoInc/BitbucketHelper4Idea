@@ -1,0 +1,32 @@
+<idea-plugin>
+    <id>com.devex.BitbucketHelper4Idea</id>
+    <name>Plugin display name here</name>
+    <vendor email="support@yourcompany.com" url="http://www.yourcompany.com">YourCompany</vendor>
+
+    <description><![CDATA[
+    Enter short description for your plugin here.<br>
+    <em>most HTML tags may be used</em>
+    ]]></description>
+
+    <depends>com.intellij.modules.lang</depends>
+    <depends>Git4Idea</depends>
+
+
+    <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
+         on how to target different products -->
+    <!-- uncomment to enable plugin in all products
+    <depends>com.intellij.modules.lang</depends>
+    -->
+
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- todo: a pretty icon needed -->
+        <toolWindow id="MyBitbucket" anchor="right"
+                    icon="C:\\repo\\BitbucketHelper4Idea\\resources\\alien.png" factoryClass="MainWindow">
+
+        </toolWindow>
+    </extensions>
+
+    <actions>
+        <!-- Add your actions here -->
+    </actions>
+</idea-plugin>

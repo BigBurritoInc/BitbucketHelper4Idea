@@ -1,0 +1,4 @@
+package http
+
+class CompletableFutureCallback {
+}
