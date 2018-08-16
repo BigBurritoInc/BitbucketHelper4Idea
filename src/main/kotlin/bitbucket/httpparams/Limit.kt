@@ -1,6 +1,5 @@
 package bitbucket.httpparams
 
-import bitbucket.data.HttpRequestParameter
 import com.palominolabs.http.url.UrlBuilder
 
 open class Limit(private val size: Int): HttpRequestParameter {

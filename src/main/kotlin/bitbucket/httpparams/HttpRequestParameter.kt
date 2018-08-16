@@ -1,4 +1,4 @@
-package bitbucket.data
+package bitbucket.httpparams
 
 import com.palominolabs.http.url.UrlBuilder
 

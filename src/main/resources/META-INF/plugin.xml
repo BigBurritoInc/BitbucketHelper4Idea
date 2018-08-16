@@ -11,20 +11,15 @@
     <depends>com.intellij.modules.lang</depends>
     <depends>Git4Idea</depends>
 
-
-    <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
-         on how to target different products -->
-    <!-- uncomment to enable plugin in all products
-    <depends>com.intellij.modules.lang</depends>
-    -->
-
     <extensions defaultExtensionNs="com.intellij">
+        <postStartupActivity implementation="PostStartupActivity"/>
         <!-- todo: a pretty icon needed -->
         <toolWindow id="MyBitbucket" anchor="right"
-                    icon="C:\\repo\\BitbucketHelper4Idea\\resources\\alien.png" factoryClass="MainWindow">
+                    icon="bitbucket-13.png" factoryClass="MainWindow">
 
         </toolWindow>
     </extensions>
+
 
     <actions>
         <!-- Add your actions here -->

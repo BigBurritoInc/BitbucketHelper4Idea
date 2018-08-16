@@ -18,6 +18,7 @@ dependencies {
     compile "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.6.5"
     compile "com.ning:async-http-client:1.9.33"
     compile "io.reactivex:rxjava:1.1.1"
+    compile 'org.apache.httpcomponents:httpasyncclient:4.1.4'
 }
 
 compileKotlin {
@@ -30,6 +31,7 @@ intellij {
     version '2018.2'
     plugins 'git4idea'
     pluginName 'BitbucketHelper4Idea'
+    alternativeIdePath 'C:\\Program Files\\JetBrains\\IntelliJ IDEA Community Edition 2018.2'
 }
 patchPluginXml {
     changeNotes """

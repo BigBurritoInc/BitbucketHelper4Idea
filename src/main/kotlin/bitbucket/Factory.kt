@@ -2,24 +2,46 @@ package bitbucket
 
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
-import http.AuthHttpClient
+import http.HttpAuthRequestFactory
+import org.apache.http.impl.nio.client.HttpAsyncClients
+import org.apache.http.nio.client.HttpAsyncClient
 import java.net.URL
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.*
 
 fun createClient(): BitbucketClient {
-    //todo normal try with res
+    val info = bitbucketInfo()
+    val objectMapper = ObjectMapper()
+    objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+    return BitbucketClient(
+            createHttpClient(),
+            HttpAuthRequestFactory(info.user, info.password),
+            info.baseURL, info.project, info.repoSlug, objectMapper.reader(), objectMapper.writer())
+}
+
+private fun createHttpClient(): HttpAsyncClient {
+    val client = HttpAsyncClients.createDefault()
+    client.start()
+    return client
+}
+
+private fun loadProperties(): Properties {
     val br = Files.newBufferedReader(Paths.get("C:\\opt\\repo.properties"))
     val props = Properties()
     props.load(br)
     br.close()
-    val objectMapper = ObjectMapper()
-    objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-    return BitbucketClient(
-            AuthHttpClient(props.getProperty("user"), props.getProperty("pass")),
-            URL(props.getProperty("url")),
-            props.getProperty("project"),
-            props.getProperty("slug"),
-            objectMapper.reader(), objectMapper.writer())
+    return props
+}
+
+private fun bitbucketInfo(): BitbucketInfo {
+    return BitbucketInfo(loadProperties())
+}
+
+class BitbucketInfo(props: Properties) {
+    val baseURL: URL = URL(props.getProperty("url"))
+    val project: String = props.getProperty("project")
+    val repoSlug: String = props.getProperty("slug")
+    val user: String = props.getProperty("user")
+    val password: String = props.getProperty("pass")
 }

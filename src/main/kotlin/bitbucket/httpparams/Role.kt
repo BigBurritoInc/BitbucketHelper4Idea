@@ -1,6 +1,5 @@
 package bitbucket.httpparams
 
-import bitbucket.data.HttpRequestParameter
 import com.palominolabs.http.url.UrlBuilder
 
 enum class Role(private val paramValue: String): HttpRequestParameter {
