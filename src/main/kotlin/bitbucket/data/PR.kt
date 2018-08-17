@@ -27,6 +27,6 @@ data class PR(@JsonProperty("id") val id: Long,
         get() = ZonedDateTime.ofInstant(updatedDate.toInstant(), ZoneId.of("UTC"))
 
     private fun toUsualBranchName(canonicalName: String): String {
-        return canonicalName.replace("refs/heads/", "")
+        return canonicalName.replace("ref/heads/", "").replace("refs/heads/", "")
     }
 }
