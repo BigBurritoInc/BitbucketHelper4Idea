@@ -4,6 +4,8 @@ import rx.Observable
 object Runner {
     @JvmStatic fun main(args: Array<String>) {
         val client = createClient()
+        val r = PanelRunner
+    //    client.approve(r.createPR(7255))
         client.requestReviewedPRs()
                 .doOnError { println("Error: $it") }
                 .flatMap { page -> Observable.from(page.values)}

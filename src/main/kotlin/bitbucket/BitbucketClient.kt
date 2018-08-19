@@ -5,17 +5,19 @@ import bitbucket.httpparams.*
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectReader
 import com.fasterxml.jackson.databind.ObjectWriter
-import com.intellij.util.containers.stream
 import com.palominolabs.http.url.UrlBuilder
 import http.HttpAuthRequestFactory
 import http.ResponseCallback
 import org.apache.http.HttpResponse
+import org.apache.http.entity.ByteArrayEntity
 import org.apache.http.nio.client.HttpAsyncClient
 import rx.Observable
 import rx.Observer
 import rx.subjects.ReplaySubject
 import rx.subjects.Subject
+import java.io.InputStream
 import java.net.URL
+import java.util.*
 import java.util.function.Consumer
 
 class BitbucketClient(
@@ -23,7 +25,8 @@ class BitbucketClient(
         private val httpRequestFactory: HttpAuthRequestFactory,
         private val baseUrl: URL,
         private val project: String,
-        private val slug: String,
+        private val repoSlug: String,
+        private val userSlug: String,
         private val objReader: ObjectReader,
         private val objWriter: ObjectWriter
     ) {
@@ -44,6 +47,26 @@ class BitbucketClient(
         val subj: Subject<PagedResponse<PR>, PagedResponse<PR>> = ReplaySubject.create()
         method.accept(subj)
         return subj
+    }
+
+    // /rest/api/1.0/projects/{projectKey}/repos/{repositorySlug}/pull-requests/{pullRequestId}/participants/{userSlug}
+    fun approve(pr: PR) : Boolean {
+        val urlBuilder = urlBuilder().pathSegments(
+                "projects", project, "repos", repoSlug, "pull-requests", pr.id.toString(), "participants", userSlug)
+        println(urlBuilder.toUrlString())
+        val request = httpRequestFactory.createPut(urlBuilder.toUrlString())
+        request.setHeader("Content-Type", "application/json")
+        val body = objWriter.writeValueAsBytes(Approve(SimpleUser(userSlug)))
+        val entity = ByteArrayEntity(body)
+        request.entity = entity
+        val subj: Subject<Boolean, Boolean> = ReplaySubject.create()
+        httpClient.execute(request, object: ResponseCallback<Boolean>(subj) {
+            override fun onSuccess(response: HttpResponse, observer: Observer<Boolean>) {
+                observer.onNext(true)
+                observer.onCompleted()
+            }
+        })
+        return subj.toBlocking().first()
     }
 
     /**
@@ -79,7 +102,7 @@ class BitbucketClient(
             start: Start = Start.Zero
     ) {
         val urlBuilder = urlBuilder()
-                .pathSegments("projects", project, "repos", slug, "pull-requests")
+                .pathSegments("projects", project, "repos", repoSlug, "pull-requests")
         applyParameters(urlBuilder, start, order, state)
 
         val request = httpRequestFactory.createGet(urlBuilder.toUrlString())
@@ -122,6 +145,11 @@ class BitbucketClient(
             } else {
                 onMorePagesExist(pagedResponse);
             }
+        }
+
+        private fun toStr(content: InputStream): String {
+            val s = Scanner(content).useDelimiter("\\A")
+            return if (s.hasNext()) s.next() else ""
         }
     }
 }

@@ -17,7 +17,8 @@ fun createClient(): BitbucketClient {
     return BitbucketClient(
             createHttpClient(),
             HttpAuthRequestFactory(info.user, info.password),
-            info.baseURL, info.project, info.repoSlug, objectMapper.reader(), objectMapper.writer())
+            info.baseURL, info.project, info.repoSlug, info.user,
+            objectMapper.reader(), objectMapper.writer())
 }
 
 private fun createHttpClient(): HttpAsyncClient {

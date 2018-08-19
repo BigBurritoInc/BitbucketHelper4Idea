@@ -13,12 +13,11 @@ import java.util.function.Consumer
 class PostStartupActivity : StartupActivity {
     override fun runActivity(project: Project) {
         AppExecutorUtil.getAppScheduledExecutorService().scheduleWithFixedDelay(
-                UpdateTask(createClient()), 0, 30, TimeUnit.SECONDS)
+                UpdateTask(createClient()), 0, 15, TimeUnit.SECONDS)
     }
 
     class UpdateTask(private val client: BitbucketClient): Runnable {
         override fun run() {
-            println("I was called!")
             process(client.requestReviewedPRs(), Consumer {
                 Model.updateReviewingPRs(it)
             })
@@ -37,11 +36,6 @@ class PostStartupActivity : StartupActivity {
                 //todo: handle properly
                 println(e)
             }
-
-        }
-
-        private fun invokeLater(runnable: Runnable) {
-            ApplicationManager.getApplication().invokeLater(runnable)
         }
     }
 }

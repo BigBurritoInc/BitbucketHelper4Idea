@@ -6,8 +6,6 @@ import java.awt.event.ActionEvent
 import java.awt.event.ActionListener
 import javax.swing.*
 import java.io.IOException
-import java.awt.Desktop.getDesktop
-import java.awt.Desktop.isDesktopSupported
 import java.net.URL
 
 
@@ -21,8 +19,8 @@ class PRComponent(val pr: PR): JPanel() {
     private val approveGreen = Color(89, 168, 105)
 
     private val checkoutBtn = JButton("▼ Checkout")
-    private val approveBtn = JButton("✓ Approve")
-
+    private val approveBtn = JButton("Approve")
+    private val title: Link
 
     init {
         layout = GridBagLayout()
@@ -31,41 +29,50 @@ class PRComponent(val pr: PR): JPanel() {
         c.gridwidth = 3;
         c.anchor = GridBagConstraints.WEST
 
-        val title = Link("http://google.com", pr.title)
-        title.font = Font(title.font.name, Font.TRUETYPE_FONT,16)
+        title = Link("https://tosgit.iteclientsys.local/projects/TOS/repos/tos/pull-requests/${pr.id}",
+                pr.title)
+        title.font = Font(title.font.name, Font.TRUETYPE_FONT,18)
 
-        c.insets = Insets(4, 2, 4, 2)
+        c.insets = Insets(4, 20, 2, 2)
         c.fill = GridBagConstraints.HORIZONTAL
         c.gridx = 0
         c.gridy = 0
         add(title, c)
 
-        val to = JHtmlLabel("To branch: <i>${pr.toBranch}</i>")
-        to.font = Font(to.font.name, Font.TRUETYPE_FONT, 12)
+        val to = JLabel("To branch: ${pr.toBranch}")
+        to.preferredSize = Dimension(120, 30)
+        to.font = Font(to.font.name, Font.TRUETYPE_FONT, 16)
 
         c.ipady = 0
         c.gridx = 0
         c.gridy = 1
         add(to, c)
 
+        c.insets = Insets(4, 20, 10, 2)
         c.gridwidth = 1;
-        val by = JHtmlLabel("By: ${pr.author.user.displayName}")
-        by.font = Font(by.font.name, Font.TRUETYPE_FONT, 12)
+        val by = JLabel("<html>By: <b>${pr.author.user.displayName}</b></html>")
+        by.font = Font(by.font.name, Font.TRUETYPE_FONT, 16)
+        by.preferredSize = Dimension(200, 30)
+        c.weightx = 0.0
         c.gridx = 0
         c.gridy = 2
         add(by, c)
 
-        approveBtn.preferredSize = Dimension(120, 20)
+        c.weightx = 1.0
+        c.fill = GridBagConstraints.EAST
+        approveBtn.preferredSize = Dimension(120, 40)
         approveBtn.addActionListener { Model.approve(pr) }
+        approveBtn.font = Font(approveBtn.font.name, Font.PLAIN, 16)
         approveBtn.foreground = approveGreen
-        c.gridx = 1
+        c.gridx = 2
         add(approveBtn, c)
 
-
-        checkoutBtn.preferredSize = Dimension(120, 20)
-        checkoutBtn.maximumSize = Dimension(120, 20)
+        checkoutBtn.font = Font(checkoutBtn.font.name, Font.PLAIN, 16)
+        checkoutBtn.preferredSize = Dimension(120, 40)
+        checkoutBtn.maximumSize = Dimension(120, 30)
         c.gridx = 2
-        c.anchor = GridBagConstraints.EAST
+
+
         add(checkoutBtn, c)
         checkoutBtn.addActionListener { Model.checkout(pr) }
 
@@ -75,6 +82,7 @@ class PRComponent(val pr: PR): JPanel() {
     fun currentBranchChanged(branch: String) {
         val isActive = pr.fromBranch == branch
         background = if (isActive) { selectedBg } else { unselectedBg }
+        title.background = background
         border = BorderFactory.createLineBorder(
                 if (isActive) { selectedBorder } else { unselectedBorder }, 2)
         approveBtn.isVisible = isActive
@@ -82,24 +90,16 @@ class PRComponent(val pr: PR): JPanel() {
     }
 }
 
-class JHtmlLabel(txt: String): JTextPane() {
-    init {
-        contentType = "text/html"
-        text = "<html>$txt</html>"
-        isEditable = false
-        background = null
-        border = null
-    }
-}
-
 class Link(url: String, txt: String): JButton() {
     init {
-        text = "<HTML>$txt</HTML>"
+        text = "<html>$txt</html>"
         horizontalAlignment = SwingConstants.LEFT
         isBorderPainted = false
         isOpaque = false
+        isContentAreaFilled = false
         toolTipText = url
         cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+        background = JPanel().background
         addActionListener(OpenUrlAction(URL(url)))
     }
 }

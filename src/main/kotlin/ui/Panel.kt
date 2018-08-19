@@ -20,9 +20,8 @@ abstract class Panel : JPanel(), Listener {
     }
 
     fun dataUpdated(diff: Diff) {
-        diff.added.forEach{
-            add(PRComponent(it.value), gbc)
-        }
+        diff.added.values.sortedBy { it.updatedAt }
+                .forEach{ add(PRComponent(it), gbc, 0) }
 
         synchronized(treeLock) {
             for (i in 0 until componentCount) {

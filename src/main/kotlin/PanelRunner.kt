@@ -1,7 +1,4 @@
-import bitbucket.data.Branch
-import bitbucket.data.PR
-import bitbucket.data.PRAuthor
-import bitbucket.data.User
+import bitbucket.data.*
 import ui.Diff
 import ui.createReviewPanel
 import ui.wrapIntoScroll
@@ -29,11 +26,21 @@ object PanelRunner {
         frame.isVisible = true
     }
 
-    private fun createPR(id: Long): PR {
-        return PR(id, "This is a pull request submitted by a programmer, it has a long description and it is here with # $id",
-                PRAuthor(User("har993", "billybobharley.is.here@tdameritrade.com", 2, "Billy Bob Harley")), false,
-                Branch("$br$id"),
-                Branch("ref/heads/feature/TOSX-1955-it-is-a-feature-that-has-a-story-branch"),
-                Date(System.currentTimeMillis()), Date(System.currentTimeMillis()))
+    fun createPR(id: Long): PR {
+        var title = "This is a pull request submitted by a programmer here with # $id"
+        for (p in 0 .. id % 3)
+           title += "nada klo "
+
+
+        var to = "ref/heads/feature/TOSX-1955-it-is-a-feature-that-has-a-story-branch"
+
+        for (k in 0 .. id % 4)
+            to += "8984"
+
+        return PR(id, title,
+                    PRAuthor(User("har993", "billybobharley.is.here@tdameritrade.com", 2, "Billy Bob Harley")), false,
+                    Branch("$br$id"),
+                    Branch(to),
+                    Date(System.currentTimeMillis()), Date(System.currentTimeMillis()))
     }
 }
