@@ -21,8 +21,8 @@ class MainWindow : ToolWindowFactory {
         val cm = window.contentManager
         val reviewingPanel = createReviewPanel()
         val ownPanel = createOwnPanel()
-        addTab(cm, wrapIntoScroll(reviewingPanel), "Reviewing")
-        addTab(cm, wrapIntoScroll(ownPanel), "Created")
+        addTab(cm, wrapIntoJBScroll(reviewingPanel), "Reviewing")
+        addTab(cm, wrapIntoJBScroll(ownPanel), "Created")
         Model.addListener(reviewingPanel)
         Model.addListener(ownPanel)
     }

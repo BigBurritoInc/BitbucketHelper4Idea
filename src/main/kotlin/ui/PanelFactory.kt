@@ -1,5 +1,6 @@
 package ui
 
+import com.intellij.ui.components.JBScrollPane
 import javax.swing.JPanel
 import javax.swing.JScrollPane
 
@@ -22,6 +23,13 @@ fun createOwnPanel(): Panel {
         override fun reviewedUpdated(diff: Diff) {}
     }
 }
+
+fun wrapIntoJBScroll(panel: JPanel): JScrollPane {
+    val scroll = JBScrollPane(panel)
+    scroll.verticalScrollBar.unitIncrement = 14
+    return scroll
+}
+
 
 fun wrapIntoScroll(panel: JPanel): JScrollPane {
     val scroll = JScrollPane(panel)

@@ -1,12 +1,14 @@
 package ui
 
 import bitbucket.data.PR
+import com.intellij.openapi.application.ApplicationManager
 import java.awt.*
 import java.awt.event.ActionEvent
 import java.awt.event.ActionListener
 import javax.swing.*
 import java.io.IOException
 import java.net.URL
+import java.util.function.Consumer
 
 
 class PRComponent(val pr: PR): JPanel() {
@@ -16,10 +18,11 @@ class PRComponent(val pr: PR): JPanel() {
     private val unselectedBg = Color(242, 242, 242)
     private val selectedBorder = Color(7, 135, 222)
     private val unselectedBorder = Color(205, 205, 205)
-    private val approveGreen = Color(89, 168, 105)
+    private val approveColor = Color(89, 168, 105)
 
     private val checkoutBtn = JButton("▼ Checkout")
     private val approveBtn = JButton("Approve")
+
     private val title: Link
 
     init {
@@ -39,7 +42,7 @@ class PRComponent(val pr: PR): JPanel() {
         c.gridy = 0
         add(title, c)
 
-        val to = JLabel("To branch: ${pr.toBranch}")
+        val to = JLabel("To: ${pr.toBranch}")
         to.preferredSize = Dimension(120, 30)
         to.font = Font(to.font.name, Font.TRUETYPE_FONT, 16)
 
@@ -60,17 +63,24 @@ class PRComponent(val pr: PR): JPanel() {
 
         c.weightx = 1.0
         c.fill = GridBagConstraints.EAST
-        approveBtn.preferredSize = Dimension(120, 40)
-        approveBtn.addActionListener { Model.approve(pr) }
-        approveBtn.font = Font(approveBtn.font.name, Font.PLAIN, 16)
-        approveBtn.foreground = approveGreen
         c.gridx = 2
+        approveBtn.preferredSize = Dimension(120, 40)
+        approveBtn.addActionListener {
+            Model.approve(pr, Consumer {approved ->
+                if (approved) {
+                    approveBtn.text = "Approved"
+                    approveBtn.isEnabled = false
+                }
+            })
+        }
+        approveBtn.font = Font(approveBtn.font.name, Font.PLAIN, 16)
+        approveBtn.foreground = approveColor
         add(approveBtn, c)
 
         checkoutBtn.font = Font(checkoutBtn.font.name, Font.PLAIN, 16)
         checkoutBtn.preferredSize = Dimension(120, 40)
         checkoutBtn.maximumSize = Dimension(120, 30)
-        c.gridx = 2
+
 
 
         add(checkoutBtn, c)

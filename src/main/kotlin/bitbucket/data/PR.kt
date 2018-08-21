@@ -7,18 +7,19 @@ import java.util.Date
 
 data class PR(@JsonProperty("id") val id: Long,
               @JsonProperty("title") val title: String,
-              @JsonProperty("author") val author: PRAuthor,
+              @JsonProperty("author") val author: PRParticipant,
               @JsonProperty("closed") val closed: Boolean,
               @JsonProperty("fromRef") private val from: Branch,
               @JsonProperty("toRef") private val to: Branch,
+              @JsonProperty("reviewers") private val reviewers: List<PRParticipant>,
               @JsonProperty("createdDate") private val createdDate: Date,
               @JsonProperty("updatedDate") private val updatedDate: Date) {
 
     val fromBranch: String
-        get() = toUsualBranchName(from.name)
+        get() = from.name
 
     val toBranch: String
-        get() = toUsualBranchName(to.name)
+        get() = to.name
 
     val createdAt: ZonedDateTime
         get() = ZonedDateTime.ofInstant(createdDate.toInstant(), ZoneId.of("UTC"))
@@ -26,7 +27,10 @@ data class PR(@JsonProperty("id") val id: Long,
     val updatedAt: ZonedDateTime
         get() = ZonedDateTime.ofInstant(updatedDate.toInstant(), ZoneId.of("UTC"))
 
-    private fun toUsualBranchName(canonicalName: String): String {
-        return canonicalName.replace("ref/heads/", "").replace("refs/heads/", "")
+    fun isApprovedBy(username: String): Boolean {
+        val iterator = reviewers.filter { it.user.name == username }.iterator()
+        if (iterator.hasNext())
+            return iterator.next().approved
+        return false
     }
 }

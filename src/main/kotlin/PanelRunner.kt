@@ -4,7 +4,6 @@ import ui.createReviewPanel
 import ui.wrapIntoScroll
 import java.util.*
 import javax.swing.JFrame
-import javax.swing.JScrollPane
 import kotlin.collections.HashMap
 
 object PanelRunner {
@@ -29,18 +28,18 @@ object PanelRunner {
     fun createPR(id: Long): PR {
         var title = "This is a pull request submitted by a programmer here with # $id"
         for (p in 0 .. id % 3)
-           title += "nada klo "
+           title += " more info"
 
 
-        var to = "ref/heads/feature/TOSX-1955-it-is-a-feature-that-has-a-story-branch"
+        var to = "feature/TOSX-1955-it-is-a-feature-that-has-a-story-branch"
 
         for (k in 0 .. id % 4)
             to += "8984"
 
         return PR(id, title,
-                    PRAuthor(User("har993", "billybobharley.is.here@tdameritrade.com", 2, "Billy Bob Harley")), false,
+                    PRParticipant(User("har993", "billybobharley.is.here@tdameritrade.com", 2, "Billy Bob Harley"), false), false,
                     Branch("$br$id"),
-                    Branch(to),
+                    Branch(to), emptyList(),
                     Date(System.currentTimeMillis()), Date(System.currentTimeMillis()))
     }
 }
