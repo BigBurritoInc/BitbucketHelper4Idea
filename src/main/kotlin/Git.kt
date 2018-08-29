@@ -17,7 +17,14 @@ object Git: VCS {
         val currentRepository = currentRepository()
         if (currentProject != null && currentRepository != null) {
             val branchController = GitBrancher.getInstance(currentProject)
-            branchController.checkout(branch, false, listOf(currentRepository)) {/* empty callback */}
+            val branchExists = currentRepository.branches.findBranchByName(branch) != null
+            val repos = listOf(currentRepository)
+            if (branchExists) {
+                branchController.checkout(branch, false, repos) { /* empty callback */ }
+            } else {
+                branchController.checkoutNewBranch(branch, repos)
+            }
+
         } else {
             println("prj or repo is null $currentProject $currentRepository")
         }
