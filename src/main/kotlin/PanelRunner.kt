@@ -10,7 +10,8 @@ object PanelRunner {
 
     val br = "refs/heads/feature/TOSX-1980-it-is-a-feature-that-has-a-workitem-branch"
 
-    @JvmStatic fun main(args: Array<String>) {
+    @JvmStatic
+    fun main(args: Array<String>) {
         val frame = JFrame()
         val panel = createReviewPanel()
         val map = HashMap<Long, PR>()
@@ -27,19 +28,23 @@ object PanelRunner {
 
     fun createPR(id: Long): PR {
         var title = "This is a pull request submitted by a programmer here with # $id"
-        for (p in 0 .. id % 3)
-           title += " more info"
+        for (p in 0..id % 3)
+            title += " more info"
 
 
         var to = "feature/TOSX-1955-it-is-a-feature-that-has-a-story-branch"
 
-        for (k in 0 .. id % 4)
+        for (k in 0..id % 4)
             to += "8984"
 
         return PR(id, title,
-                    PRParticipant(User("har993", "billybobharley.is.here@tdameritrade.com", 2, "Billy Bob Harley"), false), false,
-                    Branch("$br$id"),
-                    Branch(to), emptyList(),
-                    Date(System.currentTimeMillis()), Date(System.currentTimeMillis()))
+                PRParticipant(User("har993", "billybobharley.is.here@tdameritrade.com", 2, "Billy Bob Harley",
+                        Links(listOf(Links.Link("https://developer.atlassian.com/bitbucket/api/2/reference/")))), false),
+                false,
+                Branch("$br$id"),
+                Branch(to), emptyList(),
+                Date(System.currentTimeMillis()), Date(System.currentTimeMillis()),
+                Links(listOf(Links.Link("https://developer.atlassian.com/bitbucket/api/2/reference/")))
+        )
     }
 }
