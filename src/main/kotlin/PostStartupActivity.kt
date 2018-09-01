@@ -1,5 +1,5 @@
 import bitbucket.BitbucketClient
-import bitbucket.createClient
+import bitbucket.BitbucketClientFactory
 import bitbucket.data.PagedResponse
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.StartupActivity
@@ -12,7 +12,6 @@ import java.util.function.Consumer
 
 object PostStartupActivity : StartupActivity {
     var future:ScheduledFuture<*>? = null // todo get rid of null, find more right way to store
-    var password:CharArray? = null
 
     override fun runActivity(project: Project) { // todo we have project here, we must use it
         reschedule()
@@ -21,8 +20,9 @@ object PostStartupActivity : StartupActivity {
     fun reschedule() {
         if (future != null)
             (future as ScheduledFuture<*>).cancel(true)
+        val client = BitbucketClientFactory.createClient()
         future = AppExecutorUtil.getAppScheduledExecutorService().scheduleWithFixedDelay(
-                UpdateTask(createClient()), 0, 15, TimeUnit.SECONDS) as ScheduledFuture<UpdateTask>
+                UpdateTask(client), 0, 15, TimeUnit.SECONDS) as ScheduledFuture<UpdateTask>
     }
 
     class UpdateTask(private val client: BitbucketClient): Runnable {
