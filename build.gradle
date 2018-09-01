@@ -28,10 +28,10 @@ compileTestKotlin {
     kotlinOptions.jvmTarget = "1.8"
 }
 intellij {
-    version '2017.2'
+    version '2018.2'
     plugins 'git4idea'
     pluginName 'BitbucketHelper4Idea'
-    alternativeIdePath 'ideaIC-2017.2.7.win'
+    alternativeIdePath 'C:\\Program Files\\JetBrains\\IntelliJ IDEA Community Edition 2018.2'
 }
 patchPluginXml {
     changeNotes """
