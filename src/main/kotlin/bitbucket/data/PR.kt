@@ -3,7 +3,7 @@ package bitbucket.data
 import com.fasterxml.jackson.annotation.JsonProperty
 import java.time.ZoneId
 import java.time.ZonedDateTime
-import java.util.Date
+import java.util.*
 
 data class PR(@JsonProperty("id") val id: Long,
               @JsonProperty("title") val title: String,
@@ -13,7 +13,8 @@ data class PR(@JsonProperty("id") val id: Long,
               @JsonProperty("toRef") private val to: Branch,
               @JsonProperty("reviewers") private val reviewers: List<PRParticipant>,
               @JsonProperty("createdDate") private val createdDate: Date,
-              @JsonProperty("updatedDate") private val updatedDate: Date) {
+              @JsonProperty("updatedDate") private val updatedDate: Date,
+              @JsonProperty("links") val links: Links) {
 
     val fromBranch: String
         get() = from.name

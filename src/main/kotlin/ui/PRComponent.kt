@@ -1,14 +1,13 @@
 package ui
 
 import bitbucket.data.PR
-import com.intellij.openapi.application.ApplicationManager
 import java.awt.*
 import java.awt.event.ActionEvent
 import java.awt.event.ActionListener
-import javax.swing.*
 import java.io.IOException
 import java.net.URL
 import java.util.function.Consumer
+import javax.swing.*
 
 
 class PRComponent(val pr: PR): JPanel() {
@@ -29,11 +28,10 @@ class PRComponent(val pr: PR): JPanel() {
         layout = GridBagLayout()
         val c = GridBagConstraints()
 
-        c.gridwidth = 3;
+        c.gridwidth = 3
         c.anchor = GridBagConstraints.WEST
 
-        title = Link("https://tosgit.iteclientsys.local/projects/TOS/repos/tos/pull-requests/${pr.id}",
-                pr.title)
+        title = Link(pr.links.getSelfHref(), pr.title)
         title.font = Font(title.font.name, Font.TRUETYPE_FONT,18)
 
         c.insets = Insets(4, 20, 2, 2)
@@ -52,7 +50,7 @@ class PRComponent(val pr: PR): JPanel() {
         add(to, c)
 
         c.insets = Insets(4, 20, 10, 2)
-        c.gridwidth = 1;
+        c.gridwidth = 1
         val by = JLabel("<html>By: <b>${pr.author.user.displayName}</b></html>")
         by.font = Font(by.font.name, Font.TRUETYPE_FONT, 16)
         by.preferredSize = Dimension(200, 30)
