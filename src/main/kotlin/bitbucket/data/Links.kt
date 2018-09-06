@@ -7,4 +7,6 @@ data class Links(@JsonProperty("self")private val selfLink: List<Link>) {
 
     fun getSelfHref(): String = selfLink.first().href
 
+    fun getIconHref(): String = "${selfLink.first().href}/avatar.png?s=24"
+
 }
