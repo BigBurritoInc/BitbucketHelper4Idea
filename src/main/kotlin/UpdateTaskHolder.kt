@@ -1,8 +1,6 @@
 import bitbucket.BitbucketClient
 import bitbucket.BitbucketClientFactory
 import bitbucket.data.PagedResponse
-import com.intellij.openapi.project.Project
-import com.intellij.openapi.startup.StartupActivity
 import com.intellij.util.concurrency.AppExecutorUtil
 import rx.Observable
 import ui.Model
@@ -10,12 +8,8 @@ import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
 import java.util.function.Consumer
 
-object PostStartupActivity : StartupActivity {
-    var future:ScheduledFuture<*>? = null // todo get rid of null, find more right way to store
-
-    override fun runActivity(project: Project) { // todo we have project here, we must use it
-        reschedule()
-    }
+object UpdateTaskHolder {
+    var future: ScheduledFuture<*>? = null // todo get rid of null, find more right way to store
 
     fun reschedule() {
         if (future != null)

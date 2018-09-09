@@ -41,7 +41,7 @@ class BitbucketHelperConfigurable : SearchableConfigurable, Configurable.NoScrol
         settings.slug = slugField.text
         settings.url = urlField.text
         settings.login = loginField.text
-        PostStartupActivity.reschedule()
+        UpdateTaskHolder.reschedule()
     }
 
     private val projectField = JTextField()

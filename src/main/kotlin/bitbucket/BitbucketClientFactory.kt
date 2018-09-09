@@ -8,7 +8,6 @@ import com.intellij.openapi.components.ServiceManager
 import http.HttpAuthRequestFactory
 import org.apache.http.impl.nio.client.HttpAsyncClients
 import org.apache.http.nio.client.HttpAsyncClient
-import ui.PasswordDialog
 import ui.Storer
 import java.net.URL
 
@@ -18,12 +17,6 @@ object BitbucketClientFactory {
     val storer = ServiceManager.getService<Storer>(CommonDataKeys.PROJECT.getData(DataManager.getInstance().getDataContext())!!, Storer::class.java);
 
     fun createClient(): BitbucketClient {
-
-        if (password.isEmpty()) {
-            val dialog = PasswordDialog(false)
-            dialog.showAndGet()
-            password = dialog.getPassword()
-        }
 
         val objectMapper = ObjectMapper()
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)

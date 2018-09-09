@@ -12,7 +12,6 @@
     <depends>Git4Idea</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <postStartupActivity implementation="PostStartupActivity"/>
         <!-- todo: a pretty icon needed -->
         <toolWindow id="MyBitbucket" anchor="right"
                     icon="bitbucket-13.png" factoryClass="MainWindow">
