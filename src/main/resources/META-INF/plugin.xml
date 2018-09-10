@@ -12,12 +12,15 @@
     <depends>Git4Idea</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <postStartupActivity implementation="PostStartupActivity"/>
         <!-- todo: a pretty icon needed -->
         <toolWindow id="MyBitbucket" anchor="right"
                     icon="bitbucket-13.png" factoryClass="MainWindow">
 
         </toolWindow>
+        <applicationConfigurable groupId="root" groupWeight="1" instance="ui.BitbucketHelperConfigurable" id="preferences.BitbucketHelper4Idea"
+                                 displayName="Bitbucket"/>
+        <projectService serviceInterface="ui.Storer"
+                        serviceImplementation="ui.Storer"/>
     </extensions>
 
 
