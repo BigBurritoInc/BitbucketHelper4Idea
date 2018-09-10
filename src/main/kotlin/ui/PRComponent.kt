@@ -82,9 +82,11 @@ class PRComponent(val pr: PR): JPanel() {
         add(checkoutBtn, c)
         checkoutBtn.addActionListener { Model.checkout(pr) }
 
-        if (pr.reviewers.isNotEmpty()) {
+        val reviewers = pr.reviewers.sortedWith(compareByDescending { it.approved })
+
+        if (reviewers.isNotEmpty()) {
             var reviewerOffset = 200
-            pr.reviewers.forEach {
+            reviewers.forEach {
                 c.insets = Insets(4, reviewerOffset, 10, 2)
                 val picLabel = ReviewerComponentFactory.create(it)
                 add(picLabel, c)
