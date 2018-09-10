@@ -71,8 +71,7 @@ object Model {
     }
 
     fun checkout(pr: PR) {
-        vcs.checkoutBranch(pr.fromBranch)
-        branchChanged()
+        vcs.checkoutBranch(pr.fromBranch, Runnable { branchChanged() })
     }
 
     fun approve(pr: PR, callback: Consumer<Boolean>) {

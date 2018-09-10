@@ -1,4 +1,4 @@
 interface VCS {
-    fun checkoutBranch(branch: String)
+    fun checkoutBranch(branch: String, listener:Runnable)
     fun currentBranch(): String
 }
