@@ -33,8 +33,7 @@ class HttpAuthRequestFactory(private val user: String, private val password: Str
     }
 
     private fun authString(): String {
-        val decodedPassword = String(Base64.getDecoder().decode(password))
-        val authArray = ("$user:$decodedPassword").toByteArray(StandardCharsets.UTF_8)
+        val authArray = ("$user:$password").toByteArray(StandardCharsets.UTF_8)
         return Base64.getEncoder().encodeToString(authArray)
     }
 }
