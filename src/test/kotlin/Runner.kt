@@ -1,9 +1,9 @@
-import bitbucket.createClient
+import bitbucket.BitbucketClientFactory
 import rx.Observable
 
 object Runner {
     @JvmStatic fun main(args: Array<String>) {
-        val client = createClient()
+        val client = BitbucketClientFactory.createClient()
         val r = PanelRunner
     //    client.approve(r.createPR(7255))
         client.requestReviewedPRs()

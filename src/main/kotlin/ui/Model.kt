@@ -4,13 +4,12 @@ import bitbucket.data.PR
 import com.intellij.openapi.application.ApplicationManager
 import VCS
 import Git
-import bitbucket.createClient
+import bitbucket.BitbucketClientFactory
 import com.intellij.notification.NotificationDisplayType
 import com.intellij.notification.NotificationGroup
 import com.intellij.notification.Notifications
 import com.intellij.notification.NotificationType
 import com.intellij.util.concurrency.AppExecutorUtil
-import http.ResponseCallback
 import java.util.function.Consumer
 
 
@@ -72,14 +71,13 @@ object Model {
     }
 
     fun checkout(pr: PR) {
-        vcs.checkoutBranch(pr.fromBranch)
-        branchChanged()
+        vcs.checkoutBranch(pr.fromBranch, Runnable { branchChanged() })
     }
 
     fun approve(pr: PR, callback: Consumer<Boolean>) {
         AppExecutorUtil.getAppScheduledExecutorService().execute {
             try {
-                val result = createClient().approve(pr)
+                val result = BitbucketClientFactory.createClient().approve(pr)
                 if (result)
                     approvedNotification(pr)
                 ApplicationManager.getApplication().invokeLater {

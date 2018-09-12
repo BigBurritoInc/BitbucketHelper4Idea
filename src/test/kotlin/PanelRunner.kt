@@ -8,7 +8,7 @@ import kotlin.collections.HashMap
 
 object PanelRunner {
 
-    val br = "refs/heads/feature/TOSX-1980-it-is-a-feature-that-has-a-workitem-branch"
+    val br = "feature/TOSX-1980-it-is-a-feature-that-has-a-workitem-branch"
 
     @JvmStatic
     fun main(args: Array<String>) {

@@ -1,10 +1,12 @@
 package ui
 
 import bitbucket.data.PR
+import com.intellij.ide.BrowserUtil
+import com.intellij.ui.components.JBLabel
+import com.intellij.util.ui.JBUI
+import com.intellij.util.ui.UIUtil
+import com.intellij.util.ui.UIUtil.ComponentStyle.MINI
 import java.awt.*
-import java.awt.event.ActionEvent
-import java.awt.event.ActionListener
-import java.io.IOException
 import java.net.URL
 import java.util.function.Consumer
 import javax.swing.*
@@ -12,17 +14,14 @@ import javax.swing.*
 
 class PRComponent(val pr: PR): JPanel() {
 
-    //todo: use idea colors
-    private val selectedBg = Color(227, 241, 250)
-    private val unselectedBg = Color(242, 242, 242)
-    private val selectedBorder = Color(7, 135, 222)
-    private val unselectedBorder = Color(205, 205, 205)
     private val approveColor = Color(89, 168, 105)
 
     private val checkoutBtn = JButton("▼ Checkout")
     private val approveBtn = JButton("Approve")
 
     private val title: Link
+    private val toBranch: JBLabel
+    private val author: JBLabel
 
     init {
         layout = GridBagLayout()
@@ -31,38 +30,35 @@ class PRComponent(val pr: PR): JPanel() {
         c.gridwidth = 3
         c.anchor = GridBagConstraints.WEST
 
-        title = Link(pr.links.getSelfHref(), pr.title)
-        title.font = Font(title.font.name, Font.TRUETYPE_FONT,18)
-
-        c.insets = Insets(4, 20, 2, 2)
+        title = Link(URL(pr.links.getSelfHref()), pr.title)
+        c.insets = Insets(4, 18, 2, 2)
         c.fill = GridBagConstraints.HORIZONTAL
         c.gridx = 0
         c.gridy = 0
         add(title, c)
 
-        val to = JLabel("To: ${pr.toBranch}")
-        to.preferredSize = Dimension(120, 30)
-        to.font = Font(to.font.name, Font.TRUETYPE_FONT, 16)
-
+        toBranch = JBLabel("To: ${pr.toBranch}", MINI)
+        toBranch.preferredSize = Dimension(120, 30)
+        c.insets = Insets(4, 20, 0, 2)
         c.ipady = 0
         c.gridx = 0
         c.gridy = 1
-        add(to, c)
+        add(toBranch, c)
 
-        c.insets = Insets(4, 20, 10, 2)
         c.gridwidth = 1
-        val by = JLabel("<html>By: <b>${pr.author.user.displayName}</b></html>")
-        by.font = Font(by.font.name, Font.TRUETYPE_FONT, 16)
-        by.preferredSize = Dimension(200, 30)
+        author = JBLabel("<html>By: <b>${pr.author.user.displayName}</b></html>", MINI)
+        author.preferredSize = Dimension(200, 30)
         c.weightx = 0.0
         c.gridx = 0
         c.gridy = 2
-        add(by, c)
+        c.insets = Insets(4, 20, 8, 2)
+        add(author, c)
 
         c.weightx = 1.0
         c.fill = GridBagConstraints.EAST
         c.gridx = 2
-        approveBtn.preferredSize = Dimension(120, 40)
+        val buttonSize = Dimension(120, 36)
+        approveBtn.preferredSize = buttonSize
         approveBtn.addActionListener {
             Model.approve(pr, Consumer {approved ->
                 if (approved) {
@@ -71,14 +67,13 @@ class PRComponent(val pr: PR): JPanel() {
                 }
             })
         }
-        approveBtn.font = Font(approveBtn.font.name, Font.PLAIN, 16)
         approveBtn.foreground = approveColor
+        approveBtn.font = UIUtil.getButtonFont()
         add(approveBtn, c)
 
-        checkoutBtn.font = Font(checkoutBtn.font.name, Font.PLAIN, 16)
-        checkoutBtn.preferredSize = Dimension(120, 40)
-        checkoutBtn.maximumSize = Dimension(120, 30)
-
+        checkoutBtn.preferredSize = buttonSize
+        checkoutBtn.maximumSize = buttonSize
+        checkoutBtn.font = UIUtil.getButtonFont()
         add(checkoutBtn, c)
         checkoutBtn.addActionListener { Model.checkout(pr) }
 
@@ -96,46 +91,38 @@ class PRComponent(val pr: PR): JPanel() {
             }
         }
 
-        border = BorderFactory.createLineBorder(unselectedBorder, 2)
+        border = UIUtil.getTextFieldBorder()
     }
 
     fun currentBranchChanged(branch: String) {
         val isActive = pr.fromBranch == branch
-        background = if (isActive) { selectedBg } else { unselectedBg }
-        title.background = background
-        border = BorderFactory.createLineBorder(
-                if (isActive) { selectedBorder } else { unselectedBorder }, 2)
+        background = UIUtil.getListBackground(isActive)
+        setComponentsForeground(UIUtil.getListForeground(isActive))
+        title.background = UIUtil.getListBackground(isActive)
         approveBtn.isVisible = isActive
         checkoutBtn.isVisible = !isActive
     }
+
+    private fun setComponentsForeground(color: Color) {
+        title.foreground = color
+        toBranch.foreground = color
+        author.foreground = color
+    }
 }
 
-class Link(url: String, txt: String): JButton() {
+class Link(url: URL, txt: String): JButton() {
+    private val innerMargin = Insets(0, 2, 1, 0);
+
     init {
-        text = "<html>$txt</html>"
+        text = txt
         horizontalAlignment = SwingConstants.LEFT
         isBorderPainted = false
         isOpaque = false
         isContentAreaFilled = false
-        toolTipText = url
+        toolTipText = url.toString()
         cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
-        background = JPanel().background
-        addActionListener(OpenUrlAction(URL(url)))
+        margin = innerMargin
+        isRolloverEnabled = false
+        addActionListener { BrowserUtil.browse(url) }
     }
-}
-
-class OpenUrlAction(val url: URL): ActionListener {
-    override fun actionPerformed(e: ActionEvent?) {
-        if (Desktop.isDesktopSupported()) {
-            try {
-                Desktop.getDesktop().browse(url.toURI())
-            } catch (e: IOException) {
-                //todo ???
-                println(e)
-            }
-        } else { //todo ???
-            println("not desktop supported")
-        }
-    }
-
 }
