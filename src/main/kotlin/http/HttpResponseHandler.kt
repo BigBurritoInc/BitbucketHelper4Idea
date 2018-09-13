@@ -11,6 +11,9 @@ class HttpResponseHandler<T>(private val objectReader: ObjectReader, private val
     fun handle(response: HttpResponse): T = process(response) { objectReader.forType(bodyType).readValue(it) }
 
     companion object {
+        /**
+         * Use this handle when response body is empty or is not needed
+         */
         fun handle(response: HttpResponse) {
             process(response) {}
         }
