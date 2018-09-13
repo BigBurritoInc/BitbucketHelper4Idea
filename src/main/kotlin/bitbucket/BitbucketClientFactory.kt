@@ -6,15 +6,14 @@ import com.intellij.ide.DataManager
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.components.ServiceManager
 import http.HttpAuthRequestFactory
-import org.apache.http.impl.nio.client.HttpAsyncClients
-import org.apache.http.nio.client.HttpAsyncClient
+import org.apache.http.impl.client.HttpClients
 import ui.Storer
 import java.net.URL
 
 object BitbucketClientFactory {
 
     var password:CharArray = kotlin.CharArray(0)
-    val storer = ServiceManager.getService<Storer>(CommonDataKeys.PROJECT.getData(DataManager.getInstance().getDataContext())!!, Storer::class.java);
+    val storer = ServiceManager.getService<Storer>(CommonDataKeys.PROJECT.getData(DataManager.getInstance().getDataContext())!!, Storer::class.java)
 
     fun createClient(): BitbucketClient {
 
@@ -29,9 +28,5 @@ object BitbucketClientFactory {
                 objectMapper.reader(), objectMapper.writer())
     }
 
-    private fun createHttpClient(): HttpAsyncClient {
-        val client = HttpAsyncClients.createDefault()
-        client.start()
-        return client
-    }
+    private fun createHttpClient() =  HttpClients.createDefault()
 }

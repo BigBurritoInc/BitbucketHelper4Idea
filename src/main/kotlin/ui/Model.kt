@@ -1,14 +1,14 @@
 package ui
 
-import bitbucket.data.PR
-import com.intellij.openapi.application.ApplicationManager
-import VCS
 import Git
+import VCS
 import bitbucket.BitbucketClientFactory
+import bitbucket.data.PR
 import com.intellij.notification.NotificationDisplayType
 import com.intellij.notification.NotificationGroup
-import com.intellij.notification.Notifications
 import com.intellij.notification.NotificationType
+import com.intellij.notification.Notifications
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.util.concurrency.AppExecutorUtil
 import java.util.function.Consumer
 
@@ -77,11 +77,10 @@ object Model {
     fun approve(pr: PR, callback: Consumer<Boolean>) {
         AppExecutorUtil.getAppScheduledExecutorService().execute {
             try {
-                val result = BitbucketClientFactory.createClient().approve(pr)
-                if (result)
-                    approvedNotification(pr)
+                BitbucketClientFactory.createClient().approve(pr)
+                approvedNotification(pr)
                 ApplicationManager.getApplication().invokeLater {
-                    callback.accept(result)
+                    callback.accept(true)
                 }
             } catch (e: Exception) {
                 //todo: handle
