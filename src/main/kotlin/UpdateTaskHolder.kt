@@ -2,6 +2,7 @@ import bitbucket.BitbucketClient
 import bitbucket.BitbucketClientFactory
 import com.intellij.util.concurrency.AppExecutorUtil
 import kotlinx.coroutines.experimental.Deferred
+import kotlinx.coroutines.experimental.Runnable
 import kotlinx.coroutines.experimental.runBlocking
 import ui.Model
 import java.util.concurrent.ScheduledFuture
@@ -18,26 +19,21 @@ object UpdateTaskHolder {
                 UpdateTask(client), 0, 15, TimeUnit.SECONDS)
     }
 
-    class UpdateTask(private val client: BitbucketClient): Runnable {
+    class UpdateTask(private val client: BitbucketClient) : Runnable {
         override fun run() {
-            runBlocking {
-                process(client.reviewedPRs(), Consumer {
-                    Model.updateReviewingPRs(it)
-                })
-                process(client.ownPRs(), Consumer {
-                    Model.updateOwnPRs(it)
-                })
-            }
+            process(client.reviewedPRs(), Consumer {
+                Model.updateReviewingPRs(it)
+            })
+            process(client.ownPRs(), Consumer {
+                Model.updateOwnPRs(it)
+            })
         }
+    }
 
-        private suspend fun <T> process(obs: Deferred<List<T>>, consumer: Consumer<List<T>>) {
-            try {
-                val prs = obs.await()
-                consumer.accept(prs)
-            } catch (e: Exception) {
-                //todo: handle properly
-                println(e)
-            }
+    private fun <T> process(obs: Deferred<List<T>>, consumer: Consumer<List<T>>) {
+        runBlocking {
+            val prs = obs.await()
+            consumer.accept(prs)
         }
     }
 }
