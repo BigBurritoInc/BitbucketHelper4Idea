@@ -76,6 +76,21 @@ class PRComponent(val pr: PR): JPanel() {
         checkoutBtn.font = UIUtil.getButtonFont()
         add(checkoutBtn, c)
         checkoutBtn.addActionListener { Model.checkout(pr) }
+
+        val reviewers = pr.reviewers.sortedWith(compareByDescending { it.approved })
+
+        if (reviewers.isNotEmpty()) {
+            var reviewerOffset = 200
+            reviewers.forEach {
+                c.insets = Insets(4, reviewerOffset, 10, 2)
+                val picLabel = ReviewerComponentFactory.create(it)
+                add(picLabel, c)
+                //todo there is will be a problem then a number of reviewers is high. Better approach is
+                //todo to show 2 first reviewers and to hide others in pop up menu
+                reviewerOffset += 50
+            }
+        }
+
         border = UIUtil.getTextFieldBorder()
     }
 
