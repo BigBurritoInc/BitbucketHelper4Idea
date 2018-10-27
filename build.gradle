@@ -12,13 +12,11 @@ repositories {
 }
 
 dependencies {
+    compile 'org.jetbrains.kotlinx:kotlinx-coroutines-core:0.22.5'
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     compile 'com.palominolabs.http:url-builder:1.1.1'
     compile "com.fasterxml.jackson.core:jackson-databind:2.6.5"
     compile "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.6.5"
-    compile "com.ning:async-http-client:1.9.33"
-    compile "io.reactivex:rxjava:1.1.1"
-    compile 'org.apache.httpcomponents:httpasyncclient:4.1.4'
 }
 
 compileKotlin {
