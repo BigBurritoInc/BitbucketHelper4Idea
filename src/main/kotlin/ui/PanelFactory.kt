@@ -4,8 +4,10 @@ import com.intellij.ui.components.JBScrollPane
 import javax.swing.JPanel
 import javax.swing.JScrollPane
 
+val imagesSource = MediaSource()
+
 fun createReviewPanel(): Panel {
-    return object : Panel() {
+    return object : Panel(imagesSource) {
         override fun ownUpdated(diff: Diff) {}
 
         override fun reviewedUpdated(diff: Diff) {
@@ -15,7 +17,7 @@ fun createReviewPanel(): Panel {
 }
 
 fun createOwnPanel(): Panel {
-    return object : Panel() {
+    return object : Panel(imagesSource) {
         override fun ownUpdated(diff: Diff) {
             dataUpdated(diff)
         }

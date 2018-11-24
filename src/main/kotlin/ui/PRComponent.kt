@@ -1,18 +1,19 @@
 package ui
 
 import bitbucket.data.PR
+import bitbucket.data.PRParticipant
 import com.intellij.ide.BrowserUtil
 import com.intellij.ui.components.JBLabel
-import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.UIUtil
 import com.intellij.util.ui.UIUtil.ComponentStyle.MINI
 import java.awt.*
+import java.awt.image.BufferedImage
 import java.net.URL
 import java.util.function.Consumer
 import javax.swing.*
 
 
-class PRComponent(val pr: PR): JPanel() {
+class PRComponent(val pr: PR, private val imagesSource: MediaSource): JPanel() {
 
     private val approveColor = Color(89, 168, 105)
 
@@ -22,10 +23,11 @@ class PRComponent(val pr: PR): JPanel() {
     private val title: Link
     private val toBranch: JBLabel
     private val author: JBLabel
+    private var reviewerOffset = 200
+    private val c = GridBagConstraints()
 
     init {
         layout = GridBagLayout()
-        val c = GridBagConstraints()
 
         c.gridwidth = 3
         c.anchor = GridBagConstraints.WEST
@@ -80,14 +82,9 @@ class PRComponent(val pr: PR): JPanel() {
         val reviewers = pr.reviewers.sortedWith(compareByDescending { it.approved })
 
         if (reviewers.isNotEmpty()) {
-            var reviewerOffset = 200
-            reviewers.forEach {
-                c.insets = Insets(4, reviewerOffset, 10, 2)
-                val picLabel = ReviewerComponentFactory.create(it)
-                add(picLabel, c)
-                //todo there is will be a problem then a number of reviewers is high. Better approach is
-                //todo to show 2 first reviewers and to hide others in pop up menu
-                reviewerOffset += 50
+            reviewers.forEach {reviewer ->
+                imagesSource.retrieveImage(URL(reviewer.user.links.getIconHref()))
+                        .thenApply { image -> addReviewerImage(reviewer, image) }
             }
         }
 
@@ -107,6 +104,17 @@ class PRComponent(val pr: PR): JPanel() {
         title.foreground = color
         toBranch.foreground = color
         author.foreground = color
+    }
+
+    private fun addReviewerImage(reviewer: PRParticipant, image: BufferedImage) {
+        synchronized(treeLock) {
+            c.insets = Insets(4, reviewerOffset, 10, 2)
+            val picLabel = ReviewerComponentFactory.create(reviewer, image)
+            add(picLabel, c)
+            //todo there is will be a problem then a number of reviewers is high. Better approach is
+            //todo to show 2 first reviewers and to hide others in pop up menu
+            reviewerOffset += 50
+        }
     }
 }
 
