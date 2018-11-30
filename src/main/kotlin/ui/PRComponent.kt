@@ -59,7 +59,7 @@ class PRComponent(val pr: PR, private val imagesSource: MediaSource): JPanel() {
         c.weightx = 1.0
         c.fill = GridBagConstraints.EAST
         c.gridx = 2
-        val buttonSize = Dimension(120, 36)
+        val buttonSize = Dimension(120, 24)
         approveBtn.preferredSize = buttonSize
         approveBtn.addActionListener {
             Model.approve(pr, Consumer {approved ->
@@ -113,7 +113,7 @@ class PRComponent(val pr: PR, private val imagesSource: MediaSource): JPanel() {
             add(picLabel, c)
             //todo there is will be a problem then a number of reviewers is high. Better approach is
             //todo to show 2 first reviewers and to hide others in pop up menu
-            reviewerOffset += 50
+            reviewerOffset += 30
         }
     }
 }

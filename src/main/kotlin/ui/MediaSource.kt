@@ -33,6 +33,7 @@ class MediaSource {
         private val log = Logger.getInstance("GetImageTask")
 
         override fun run() {
+            log.debug("Running GetImageTask for url: $url")
             try {
                 future.complete(ImageIO.read(url))
             } catch (e: IOException) {

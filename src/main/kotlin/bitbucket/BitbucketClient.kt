@@ -31,15 +31,15 @@ class BitbucketClient(
 
     private val responseHandler = HttpResponseHandler(objReader, object : TypeReference<PagedResponse<PR>>() {})
 
-    fun reviewedPRs(): Deferred<List<PR>> {
+    fun reviewedPRs(): List<PR> {
         return inbox(Role.REVIEWER)
     }
 
-    fun ownPRs(): Deferred<List<PR>> {
-        return  inbox(Role.AUTHOR)
+    fun ownPRs(): List<PR> {
+        return inbox(Role.AUTHOR)
     }
 
-    fun openPRs(): Deferred<List<PR>> {
+    fun openPRs(): List<PR> {
         return findPRs(PRState.OPEN, PROrder.NEWEST)
     }
 
@@ -61,21 +61,21 @@ class BitbucketClient(
      * Calls /rest/api/1.0/inbox/pull-requests
      * @see <a href="https://docs.atlassian.com/bitbucket-server/rest/5.13.0/bitbucket-rest.html#idm46209336621072">inbox</a>
      */
-    private fun inbox(role: Role, limit: Limit = Limit.Default, start: Start = Start.Zero): Deferred<List<PR>> {
+    private fun inbox(role: Role, limit: Limit = Limit.Default, start: Start = Start.Zero): List<PR> {
         val urlBuilder = urlBuilder().pathSegments("inbox", "pull-requests")
         applyParameters(urlBuilder, role, start, limit)
 
         val request = httpRequestFactory.createGet(urlBuilder.toUrlString())
-        return async {replayPageRequest(request) {inbox(role, limit, Start(it))} }
+        return replayPageRequest(request) {inbox(role, limit, Start(it))}
     }
 
-    private fun findPRs(state: PRState, order: PROrder, start: Start = Start.Zero): Deferred<List<PR>> {
+    private fun findPRs(state: PRState, order: PROrder, start: Start = Start.Zero): List<PR> {
         val urlBuilder = urlBuilder()
                 .pathSegments("projects", project, "repos", repoSlug, "pull-requests")
         applyParameters(urlBuilder, start, order, state)
 
         val request = httpRequestFactory.createGet(urlBuilder.toUrlString())
-        return async {replayPageRequest(request) {findPRs(state, order, Start(it))} }
+        return replayPageRequest(request) {findPRs(state, order, Start(it))}
     }
 
     private fun urlBuilder() = UrlBuilder.fromUrl(baseUrl).pathSegments("rest", "api", "1.0")
@@ -87,11 +87,11 @@ class BitbucketClient(
 
     private fun sendRequest(request : HttpUriRequest ) = responseHandler.handle(httpClient.execute(request))
 
-    private suspend fun replayPageRequest(request: HttpUriRequest, replay: (Int) -> Deferred<List<PR>>): List<PR> {
+    private fun replayPageRequest(request: HttpUriRequest, replay: (Int) -> List<PR>): List<PR> {
         val pagedResponse = sendRequest(request)
         val prs = ArrayList(pagedResponse.values)
         if (!pagedResponse.isLastPage)
-            prs.addAll(replay.invoke(pagedResponse.nextPageStart).await())
+            prs.addAll(replay.invoke(pagedResponse.nextPageStart))
         return prs
     }
 }
