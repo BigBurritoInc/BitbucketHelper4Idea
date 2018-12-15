@@ -2,10 +2,12 @@ package ui
 
 import bitbucket.data.PRParticipant
 import com.intellij.util.ui.UIUtil
+import java.awt.Color
 import java.awt.Image
 import java.awt.image.BufferedImage
 import java.io.IOException
 import javax.imageio.ImageIO
+import javax.swing.BorderFactory
 import javax.swing.ImageIcon
 import javax.swing.JLabel
 
@@ -20,6 +22,9 @@ object ReviewerComponentFactory {
         val icon = if (reviewer.approved) overlay(avatar, approved) else ImageIcon(avatar)
         val iconComponent =  JLabel(icon)
         iconComponent.toolTipText = reviewer.user.displayName
+        if (reviewer.approved) {
+            iconComponent.border = BorderFactory.createLineBorder(Color.green)
+        }
         return iconComponent
     }
 

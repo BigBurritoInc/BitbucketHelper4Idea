@@ -3,11 +3,11 @@ package ui
 import bitbucket.data.PR
 import bitbucket.data.PRParticipant
 import com.intellij.ide.BrowserUtil
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.ui.components.JBLabel
 import com.intellij.util.ui.UIUtil
 import com.intellij.util.ui.UIUtil.ComponentStyle.MINI
 import java.awt.*
-import java.awt.image.BufferedImage
 import java.net.URL
 import java.util.function.Consumer
 import javax.swing.*
@@ -23,7 +23,7 @@ class PRComponent(val pr: PR, private val imagesSource: MediaSource): JPanel() {
     private val title: Link
     private val toBranch: JBLabel
     private val author: JBLabel
-    private var reviewerOffset = 200
+    private val reviewersPanel: ReviewersPanel
     private val c = GridBagConstraints()
 
     init {
@@ -34,7 +34,6 @@ class PRComponent(val pr: PR, private val imagesSource: MediaSource): JPanel() {
 
         title = Link(URL(pr.links.getSelfHref()), pr.title)
         c.insets = Insets(4, 18, 2, 2)
-        c.fill = GridBagConstraints.HORIZONTAL
         c.gridx = 0
         c.gridy = 0
         add(title, c)
@@ -57,8 +56,7 @@ class PRComponent(val pr: PR, private val imagesSource: MediaSource): JPanel() {
         add(author, c)
 
         c.weightx = 1.0
-        c.fill = GridBagConstraints.EAST
-        c.gridx = 2
+        c.gridx = 1
         val buttonSize = Dimension(120, 24)
         approveBtn.preferredSize = buttonSize
         approveBtn.addActionListener {
@@ -79,13 +77,15 @@ class PRComponent(val pr: PR, private val imagesSource: MediaSource): JPanel() {
         add(checkoutBtn, c)
         checkoutBtn.addActionListener { Model.checkout(pr) }
 
-        val reviewers = pr.reviewers.sortedWith(compareByDescending { it.approved })
+        c.gridx = 2
+        reviewersPanel = ReviewersPanel()
+        add(reviewersPanel, c)
+        pr.reviewers.forEach {reviewer ->
+            imagesSource.retrieveImage(URL(reviewer.user.links.getIconHref()))
+                    .thenApply { image -> ReviewerComponentFactory.create(reviewer, image) }
+                    .thenApplyAsync({ label -> addReviewerImage(label, reviewer) },
+                            ApplicationManager.getApplication()::invokeLater)
 
-        if (reviewers.isNotEmpty()) {
-            reviewers.forEach {reviewer ->
-                imagesSource.retrieveImage(URL(reviewer.user.links.getIconHref()))
-                        .thenApply { image -> addReviewerImage(reviewer, image) }
-            }
         }
 
         border = UIUtil.getTextFieldBorder()
@@ -94,6 +94,7 @@ class PRComponent(val pr: PR, private val imagesSource: MediaSource): JPanel() {
     fun currentBranchChanged(branch: String) {
         val isActive = pr.fromBranch == branch
         background = UIUtil.getListBackground(isActive)
+        reviewersPanel.setBgColor(background)
         setComponentsForeground(UIUtil.getListForeground(isActive))
         title.background = UIUtil.getListBackground(isActive)
         approveBtn.isVisible = isActive
@@ -106,14 +107,11 @@ class PRComponent(val pr: PR, private val imagesSource: MediaSource): JPanel() {
         author.foreground = color
     }
 
-    private fun addReviewerImage(reviewer: PRParticipant, image: BufferedImage) {
+    private fun addReviewerImage(label: JLabel, reviewer: PRParticipant) {
         synchronized(treeLock) {
-            c.insets = Insets(4, reviewerOffset, 10, 2)
-            val picLabel = ReviewerComponentFactory.create(reviewer, image)
-            add(picLabel, c)
+            reviewersPanel.addReviewer(label, reviewer)
             //todo there is will be a problem then a number of reviewers is high. Better approach is
             //todo to show 2 first reviewers and to hide others in pop up menu
-            reviewerOffset += 30
         }
     }
 }
@@ -132,5 +130,29 @@ class Link(url: URL, txt: String): JButton() {
         margin = innerMargin
         isRolloverEnabled = false
         addActionListener { BrowserUtil.browse(url) }
+    }
+}
+
+class ReviewersPanel() : JPanel(FlowLayout(FlowLayout.LEFT, 2, 2)) {
+    private val approvers = JPanel(FlowLayout(FlowLayout.LEFT, 2, 2))
+    private val reviewers = JPanel(FlowLayout(FlowLayout.LEFT, 2, 2))
+
+    init {
+        add(approvers)
+        add(reviewers)
+    }
+
+    fun addReviewer(label: JLabel, reviewer: PRParticipant) {
+        if (reviewer.approved) {
+            approvers.add(label)
+        } else {
+            reviewers.add(label)
+        }
+    }
+
+    fun setBgColor(color: Color) {
+        approvers.background = color
+        reviewers.background = color
+        background = color
     }
 }
