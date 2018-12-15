@@ -7,9 +7,13 @@ import org.apache.http.HttpResponse
 import org.apache.http.HttpStatus
 import java.io.InputStream
 
-class HttpResponseHandler<T>(private val objectReader: ObjectReader, private val bodyType: TypeReference<T>) {
+class HttpResponseHandler<T>(
+        private val objectReader: ObjectReader,
+        private val bodyType: TypeReference<T>,
+        private val invalidCredentialsAction: () -> Unit) {
 
-    fun handle(response: HttpResponse): T = process(response) { objectReader.forType(bodyType).readValue(it) }
+    fun handle(response: HttpResponse): T =
+            process(response, { objectReader.forType(bodyType).readValue(it) }, invalidCredentialsAction)
 
     companion object {
         private val log = Logger.getInstance("HttpResponseHandler")
@@ -17,16 +21,23 @@ class HttpResponseHandler<T>(private val objectReader: ObjectReader, private val
          * Use this handle when response body is empty or is not needed
          */
         fun handle(response: HttpResponse) {
-            process(response) {}
+            process(response, {})
         }
 
-        private fun  <T> process(response: HttpResponse, mapper: (InputStream) -> T ): T {
+        private fun  <T> process(
+                response: HttpResponse,
+                mapper: (InputStream) -> T,
+                invalidCredentialsAction: () -> Unit = {}
+        ): T {
             val status = response.statusLine
             val statusCode =  status.statusCode
             log.debug("Status code received: $statusCode")
             return when (statusCode) {
                 HttpStatus.SC_OK -> mapper.invoke(response.entity.content)
-                HttpStatus.SC_UNAUTHORIZED -> throw UnauthorizedException
+                HttpStatus.SC_UNAUTHORIZED -> {
+                    invalidCredentialsAction()
+                    throw UnauthorizedException
+                }
                 else -> throw RuntimeException("Status code: ${status.statusCode}, reason ${status.reasonPhrase}")
             }
         }

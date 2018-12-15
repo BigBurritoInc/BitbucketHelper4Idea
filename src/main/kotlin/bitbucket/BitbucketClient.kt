@@ -8,11 +8,10 @@ import bitbucket.httpparams.*
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectReader
 import com.fasterxml.jackson.databind.ObjectWriter
+import com.intellij.openapi.diagnostic.Logger
 import com.palominolabs.http.url.UrlBuilder
 import http.HttpAuthRequestFactory
 import http.HttpResponseHandler
-import kotlinx.coroutines.experimental.Deferred
-import kotlinx.coroutines.experimental.async
 import org.apache.http.client.HttpClient
 import org.apache.http.client.methods.HttpUriRequest
 import org.apache.http.entity.ByteArrayEntity
@@ -26,10 +25,12 @@ class BitbucketClient(
         private val repoSlug: String,
         private val userSlug: String,
         objReader: ObjectReader,
-        private val objWriter: ObjectWriter
+        private val objWriter: ObjectWriter,
+        invalidCredentialsAction: () -> Unit = {}
     ) {
-
-    private val responseHandler = HttpResponseHandler(objReader, object : TypeReference<PagedResponse<PR>>() {})
+    private val log = Logger.getInstance("BitbucketClient")
+    private val responseHandler = HttpResponseHandler(
+            objReader, object : TypeReference<PagedResponse<PR>>() {}, invalidCredentialsAction)
 
     fun reviewedPRs(): List<PR> {
         return inbox(Role.REVIEWER)
