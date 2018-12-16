@@ -2,7 +2,6 @@ package ui
 
 import bitbucket.data.PRParticipant
 import com.intellij.util.ui.UIUtil
-import java.awt.Color
 import java.awt.Image
 import java.awt.image.BufferedImage
 import java.io.IOException
@@ -12,19 +11,19 @@ import javax.swing.ImageIcon
 import javax.swing.JLabel
 
 object ReviewerComponentFactory {
+    private const val BORDER_THICKNESS = 2
+
     private const val imageSize = 24
     private val approved = resourceImage("approved.png")
     private val defaultAvatar = resourceImage("avatar.png")
 
-    //it seems that bitbucket api v1 is not supply information about "need work" flags
     fun create(reviewer: PRParticipant, reviewerAvatar: BufferedImage): JLabel {
         val avatar = try { scaleImage(reviewerAvatar) } catch (e: IOException) { defaultAvatar }
         val icon = if (reviewer.approved) overlay(avatar, approved) else ImageIcon(avatar)
         val iconComponent =  JLabel(icon)
         iconComponent.toolTipText = reviewer.user.displayName
-        if (reviewer.approved) {
-            iconComponent.border = BorderFactory.createLineBorder(Color.green)
-        }
+        val statusColor = ParticipantStatusColors.getColors(reviewer.status)
+        iconComponent.border = BorderFactory.createLineBorder(statusColor, BORDER_THICKNESS)
         return iconComponent
     }
 
