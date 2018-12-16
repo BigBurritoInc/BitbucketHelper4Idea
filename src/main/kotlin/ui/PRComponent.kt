@@ -1,18 +1,24 @@
 package ui
 
 import bitbucket.data.PR
+import bitbucket.data.PRParticipant
 import com.intellij.ide.BrowserUtil
 import com.intellij.ui.components.JBLabel
-import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.UIUtil
 import com.intellij.util.ui.UIUtil.ComponentStyle.MINI
 import java.awt.*
+import java.awt.image.BufferedImage
 import java.net.URL
+import java.util.concurrent.Executor
 import java.util.function.Consumer
+import java.util.function.Function
 import javax.swing.*
 
 
-class PRComponent(val pr: PR): JPanel() {
+class PRComponent(
+        val pr: PR,
+        private val imagesSource: MediaSource<BufferedImage>,
+        private val awtExecutor: Executor): JPanel() {
 
     private val approveColor = Color(89, 168, 105)
 
@@ -22,17 +28,17 @@ class PRComponent(val pr: PR): JPanel() {
     private val title: Link
     private val toBranch: JBLabel
     private val author: JBLabel
+    private val reviewersPanel: ReviewersPanel
+    private val c = GridBagConstraints()
 
     init {
         layout = GridBagLayout()
-        val c = GridBagConstraints()
 
         c.gridwidth = 3
         c.anchor = GridBagConstraints.WEST
 
         title = Link(URL(pr.links.getSelfHref()), pr.title)
         c.insets = Insets(4, 18, 2, 2)
-        c.fill = GridBagConstraints.HORIZONTAL
         c.gridx = 0
         c.gridy = 0
         add(title, c)
@@ -54,10 +60,9 @@ class PRComponent(val pr: PR): JPanel() {
         c.insets = Insets(4, 20, 8, 2)
         add(author, c)
 
-        c.weightx = 1.0
-        c.fill = GridBagConstraints.EAST
-        c.gridx = 2
-        val buttonSize = Dimension(120, 36)
+        c.weightx = 0.0
+        c.gridx = 1
+        val buttonSize = Dimension(120, 24)
         approveBtn.preferredSize = buttonSize
         approveBtn.addActionListener {
             Model.approve(pr, Consumer {approved ->
@@ -77,18 +82,16 @@ class PRComponent(val pr: PR): JPanel() {
         add(checkoutBtn, c)
         checkoutBtn.addActionListener { Model.checkout(pr) }
 
-        val reviewers = pr.reviewers.sortedWith(compareByDescending { it.approved })
+        c.gridx = 2
+        c.anchor = GridBagConstraints.WEST
+        c.weightx = 1.0 //let the whole PR panel stretch by resizing the right side of the reviewers panel
+        reviewersPanel = ReviewersPanel()
+        add(reviewersPanel, c)
+        pr.reviewers.forEach {reviewer ->
+            imagesSource.retrieve(URL(reviewer.user.links.getIconHref()))
+                    .thenApply { image -> ReviewerComponentFactory.create(reviewer, image) }
+                    .thenApplyAsync(Function<JLabel, Unit> { label -> addReviewerImage(label, reviewer) }, awtExecutor)
 
-        if (reviewers.isNotEmpty()) {
-            var reviewerOffset = 200
-            reviewers.forEach {
-                c.insets = Insets(4, reviewerOffset, 10, 2)
-                val picLabel = ReviewerComponentFactory.create(it)
-                add(picLabel, c)
-                //todo there is will be a problem then a number of reviewers is high. Better approach is
-                //todo to show 2 first reviewers and to hide others in pop up menu
-                reviewerOffset += 50
-            }
         }
 
         border = UIUtil.getTextFieldBorder()
@@ -97,6 +100,7 @@ class PRComponent(val pr: PR): JPanel() {
     fun currentBranchChanged(branch: String) {
         val isActive = pr.fromBranch == branch
         background = UIUtil.getListBackground(isActive)
+        reviewersPanel.setBgColor(background)
         setComponentsForeground(UIUtil.getListForeground(isActive))
         title.background = UIUtil.getListBackground(isActive)
         approveBtn.isVisible = isActive
@@ -107,6 +111,12 @@ class PRComponent(val pr: PR): JPanel() {
         title.foreground = color
         toBranch.foreground = color
         author.foreground = color
+    }
+
+    private fun addReviewerImage(label: JLabel, reviewer: PRParticipant) {
+        reviewersPanel.addReviewer(label, reviewer)
+        //todo there is will be a problem then a number of reviewers is high. Better approach is
+        //todo to show 2 first reviewers and to hide others in pop up menu
     }
 }
 
@@ -124,5 +134,45 @@ class Link(url: URL, txt: String): JButton() {
         margin = innerMargin
         isRolloverEnabled = false
         addActionListener { BrowserUtil.browse(url) }
+    }
+}
+
+class ReviewersPanel() : JPanel(FlowLayout(FlowLayout.LEFT, 2, 2)) {
+    private val approvers = JPanel(FlowLayout(FlowLayout.LEFT, 2, 2))
+    private val reviewers = JPanel(FlowLayout(FlowLayout.LEFT, 2, 2))
+    private val approvedBy = JBLabel("Approved:")
+    private val reviewBy = JBLabel("Reviewers:")
+    private val others = JBLabel("Others:")
+
+    init {
+        approvedBy.isVisible = false
+        others.isVisible = false
+        reviewBy.isVisible = false
+        add(approvedBy)
+        add(approvers)
+        add(others)
+        add(reviewBy)
+        add(reviewers)
+    }
+
+    fun addReviewer(label: JLabel, reviewer: PRParticipant) {
+        if (reviewer.approved) {
+            approvers.add(label)
+            approvedBy.isVisible = true
+            reviewBy.isVisible = false
+        } else {
+            if (approvers.componentCount == 0) {
+                reviewBy.isVisible = true
+            } else {
+                others.isVisible = true
+            }
+            reviewers.add(label)
+        }
+    }
+
+    fun setBgColor(color: Color) {
+        approvers.background = color
+        reviewers.background = color
+        background = color
     }
 }
