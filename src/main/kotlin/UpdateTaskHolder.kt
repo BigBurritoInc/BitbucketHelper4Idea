@@ -4,7 +4,6 @@ import com.intellij.notification.NotificationType
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.util.concurrency.AppExecutorUtil
 import http.HttpResponseHandler
-import kotlinx.coroutines.experimental.Runnable
 import ui.Model
 import java.lang.RuntimeException
 import java.util.concurrent.ScheduledFuture
@@ -12,13 +11,20 @@ import java.util.concurrent.TimeUnit
 
 object UpdateTaskHolder {
     private val log = Logger.getInstance(UpdateTaskHolder::class.java)
-    var future: ScheduledFuture<*>? = null // todo get rid of null, find more right way to store
+    private val lock = Object()
+    var task: CancellableTask = DummyTask()
 
     fun reschedule() {
-        future?.cancel(true)
-        val client = BitbucketClientFactory.createClient(createInvalidCredentialsAction())
-        future = AppExecutorUtil.getAppScheduledExecutorService().scheduleWithFixedDelay(
-                UpdateTask(client), 0, 15, TimeUnit.SECONDS)
+        synchronized(lock) {
+            //this lock is needed to make task initialization atomic
+            //if you want to cancel this task from another thread, you will have to wait until this block completes
+            task.cancel()
+            val client = BitbucketClientFactory.createClient(createInvalidCredentialsAction())
+            task = UpdateTask(client)
+            val future = AppExecutorUtil.getAppScheduledExecutorService().scheduleWithFixedDelay(
+                    task, 0, 15, TimeUnit.SECONDS)
+            task.setFuture(future)
+        }
     }
 
     private fun createInvalidCredentialsAction(): () -> Unit {
@@ -29,7 +35,10 @@ object UpdateTaskHolder {
         }
     }
 
-    class UpdateTask(private val client: BitbucketClient) : Runnable {
+    class UpdateTask(private val client: BitbucketClient) : CancellableTask {
+        @Volatile
+        var taskFuture: ScheduledFuture<*>? = null
+
         override fun run() {
             try {
                 log.debug("Running UpdateTask...")
@@ -37,16 +46,33 @@ object UpdateTaskHolder {
                 Model.updateOwnPRs(client.ownPRs())
             } catch (e: HttpResponseHandler.UnauthorizedException) {
                 println("UnauthorizedException")
-                val interrupted = Thread.currentThread().isInterrupted
-                if (!interrupted) {
-                    future?.cancel(true)
-                } else { // Restore the interrupted state if the thread was previously interrupted
-                    Thread.currentThread().interrupt()
-                }
+                cancel()
             } catch (e: RuntimeException) {
                 println("Error while trying to execute update task: ${e.message}")
                 log.warn(e)
             }
         }
+
+        override fun setFuture(future: ScheduledFuture<*>) {
+            this.taskFuture = future
+        }
+
+        override fun cancel() {
+            synchronized(lock) {
+                taskFuture?.cancel(true)
+            }
+        }
+    }
+
+    //This class does nothing
+    class DummyTask: CancellableTask {
+        override fun setFuture(future: ScheduledFuture<*>) {}
+        override fun cancel() {}
+        override fun run() {}
+    }
+
+    interface CancellableTask: Runnable {
+        fun setFuture(future: ScheduledFuture<*>)
+        fun cancel()
     }
 }
