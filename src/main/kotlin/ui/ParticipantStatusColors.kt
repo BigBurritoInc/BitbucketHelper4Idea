@@ -1,6 +1,6 @@
 package ui
 
-import bitbucket.httpparams.ParticipantStatus
+import bitbucket.data.ParticipantStatus
 import java.awt.Color
 
 /**

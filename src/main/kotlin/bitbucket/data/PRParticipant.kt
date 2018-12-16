@@ -1,6 +1,5 @@
 package bitbucket.data
 
-import bitbucket.httpparams.ParticipantStatus
 import com.fasterxml.jackson.annotation.JsonProperty
 
 data class PRParticipant(
