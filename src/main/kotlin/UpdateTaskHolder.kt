@@ -5,6 +5,7 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.util.concurrency.AppExecutorUtil
 import http.HttpResponseHandler
 import ui.Model
+import java.io.IOException
 import java.lang.RuntimeException
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
@@ -47,7 +48,13 @@ object UpdateTaskHolder {
             } catch (e: HttpResponseHandler.UnauthorizedException) {
                 println("UnauthorizedException")
                 cancel()
-            } catch (e: RuntimeException) {
+            } catch (e: IOException) {
+                println("IOException: ${e.message}")
+                log.warn(e)
+                Model.showNotification("Error while trying to connect to a remote host: ${e.message} \n" +
+                        "Either myBitbucket settings are invalid or the host is unreachable",
+                        NotificationType.WARNING)
+            } catch (e: Exception) {
                 println("Error while trying to execute update task: ${e.message}")
                 log.warn(e)
             }
