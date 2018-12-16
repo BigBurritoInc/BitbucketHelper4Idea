@@ -11,6 +11,8 @@ import javax.swing.ImageIcon
 import javax.swing.JLabel
 
 object ReviewerComponentFactory {
+    private const val BORDER_THICKNESS = 2
+
     private const val imageSize = 24
     private val approved = resourceImage("approved.png")
     private val defaultAvatar = resourceImage("avatar.png")
@@ -21,7 +23,7 @@ object ReviewerComponentFactory {
         val iconComponent =  JLabel(icon)
         iconComponent.toolTipText = reviewer.user.displayName
         val statusColor = ParticipantStatusColors.getColors(reviewer.status)
-        iconComponent.border = BorderFactory.createLineBorder(statusColor)
+        iconComponent.border = BorderFactory.createLineBorder(statusColor, BORDER_THICKNESS)
         return iconComponent
     }
 
