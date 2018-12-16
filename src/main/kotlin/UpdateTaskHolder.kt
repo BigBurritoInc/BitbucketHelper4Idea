@@ -3,8 +3,10 @@ import bitbucket.BitbucketClientFactory
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.util.concurrency.AppExecutorUtil
+import http.HttpResponseHandler
 import kotlinx.coroutines.experimental.Runnable
 import ui.Model
+import java.lang.RuntimeException
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
 
@@ -29,9 +31,22 @@ object UpdateTaskHolder {
 
     class UpdateTask(private val client: BitbucketClient) : Runnable {
         override fun run() {
-            log.debug("Running UpdateTask...")
-            Model.updateReviewingPRs(client.reviewedPRs())
-            Model.updateOwnPRs(client.ownPRs())
+            try {
+                log.debug("Running UpdateTask...")
+                Model.updateReviewingPRs(client.reviewedPRs())
+                Model.updateOwnPRs(client.ownPRs())
+            } catch (e: HttpResponseHandler.UnauthorizedException) {
+                println("UnauthorizedException")
+                val interrupted = Thread.currentThread().isInterrupted
+                if (!interrupted) {
+                    future?.cancel(true)
+                } else { // Restore the interrupted state if the thread was previously interrupted
+                    Thread.currentThread().interrupt()
+                }
+            } catch (e: RuntimeException) {
+                println("Error while trying to execute update task: ${e.message}")
+                log.warn(e)
+            }
         }
     }
 }
