@@ -1,13 +1,17 @@
 package ui
 
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.ui.components.JBScrollPane
+import java.awt.image.BufferedImage
+import java.util.concurrent.Executor
 import javax.swing.JPanel
 import javax.swing.JScrollPane
 
-val imagesSource = MediaSource()
+var imagesSource: MediaSource<BufferedImage> = ImagesSource()
+var awtExecutor: Executor = Executor { command -> ApplicationManager.getApplication().invokeLater(command) }
 
 fun createReviewPanel(): Panel {
-    return object : Panel(imagesSource) {
+    return object : Panel(imagesSource, awtExecutor) {
         override fun ownUpdated(diff: Diff) {}
 
         override fun reviewedUpdated(diff: Diff) {
@@ -17,7 +21,7 @@ fun createReviewPanel(): Panel {
 }
 
 fun createOwnPanel(): Panel {
-    return object : Panel(imagesSource) {
+    return object : Panel(imagesSource, awtExecutor) {
         override fun ownUpdated(diff: Diff) {
             dataUpdated(diff)
         }

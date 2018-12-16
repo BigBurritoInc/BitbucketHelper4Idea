@@ -2,7 +2,6 @@ import bitbucket.BitbucketClient
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import http.HttpAuthRequestFactory
-import kotlinx.coroutines.experimental.runBlocking
 import org.apache.http.impl.client.HttpClients
 import java.net.URL
 
@@ -17,9 +16,7 @@ object Runner {
                 URL(args[2]), args[3], args[3], args[0],
                 objectMapper.reader(), objectMapper.writer())
 
-        runBlocking {
-            client.ownPRs().await().forEach { println("OwnPR: $it") }
-            client.reviewedPRs().await().forEach { println("OwnPR: $it") }
-        }
+        client.ownPRs().forEach { println("OwnPR: $it") }
+        client.reviewedPRs().forEach { println("OwnPR: $it") }
     }
 }
