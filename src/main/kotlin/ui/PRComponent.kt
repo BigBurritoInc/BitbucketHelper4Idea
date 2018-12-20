@@ -3,22 +3,25 @@ package ui
 import bitbucket.data.PR
 import bitbucket.data.PRParticipant
 import com.intellij.ide.BrowserUtil
+import com.intellij.openapi.ui.JBPopupMenu
 import com.intellij.ui.components.JBLabel
 import com.intellij.util.ui.UIUtil
 import com.intellij.util.ui.UIUtil.ComponentStyle.MINI
 import java.awt.*
+import java.awt.event.MouseAdapter
+import java.awt.event.MouseEvent
 import java.awt.image.BufferedImage
 import java.net.URL
+import java.util.*
 import java.util.concurrent.Executor
 import java.util.function.Consumer
-import java.util.function.Function
 import javax.swing.*
 
 
 open class PRComponent(
         val pr: PR,
         private val imagesSource: MediaSource<BufferedImage>,
-        private val awtExecutor: Executor): JPanel() {
+        private val awtExecutor: Executor) : JPanel() {
 
     private val approveColor = Color(89, 168, 105)
 
@@ -73,15 +76,8 @@ open class PRComponent(
         c.gridx = 2
         c.anchor = GridBagConstraints.WEST
         c.weightx = 1.0 //let the whole PR panel stretch by resizing the right side of the reviewers panel
-        reviewersPanel = ReviewersPanel()
+        reviewersPanel = ReviewersPanel(ArrayList(pr.reviewers), imagesSource, awtExecutor)
         add(reviewersPanel, c)
-        pr.reviewers.forEach {reviewer ->
-            imagesSource.retrieve(URL(reviewer.user.links.getIconHref()))
-                    .thenApply { image -> ReviewerComponentFactory.create(reviewer, image) }
-                    .thenApplyAsync(Function<JLabel, Unit> { label -> addReviewerImage(label, reviewer) }, awtExecutor)
-
-        }
-
         border = UIUtil.getTextFieldBorder()
         maximumSize = Dimension(Integer.MAX_VALUE, 160)
     }
@@ -104,7 +100,7 @@ open class PRComponent(
     fun currentBranchChanged(branch: String) {
         val isActive = pr.fromBranch == branch
         background = UIUtil.getListBackground(isActive)
-        reviewersPanel.setBgColor(background)
+        reviewersPanel.background = background
         setComponentsForeground(UIUtil.getListForeground(isActive))
         title.background = UIUtil.getListBackground(isActive)
         approveBtn.isVisible = isActive
@@ -116,16 +112,10 @@ open class PRComponent(
         toBranch.foreground = color
         author.foreground = color
     }
-
-    private fun addReviewerImage(label: JLabel, reviewer: PRParticipant) {
-        reviewersPanel.addReviewer(label, reviewer)
-        //todo there is will be a problem then a number of reviewers is high. Better approach is
-        //todo to show 2 first reviewers and to hide others in pop up menu
-    }
 }
 
-class Link(url: URL, txt: String): JButton() {
-    private val innerMargin = Insets(0, 2, 1, 0);
+class Link(url: URL, txt: String) : JButton() {
+    private val innerMargin = Insets(0, 2, 1, 0)
 
     init {
         text = txt
@@ -152,42 +142,74 @@ class OwnPRComponent(ownPR: PR,
     }
 }
 
-class ReviewersPanel() : JPanel(FlowLayout(FlowLayout.LEFT, 2, 2)) {
-    private val approvers = JPanel(FlowLayout(FlowLayout.LEFT, 2, 2))
-    private val reviewers = JPanel(FlowLayout(FlowLayout.LEFT, 2, 2))
-    private val approvedBy = JBLabel("Approved:")
-    private val reviewBy = JBLabel("Reviewers:")
-    private val others = JBLabel("Others:")
-
-    init {
-        approvedBy.isVisible = false
-        others.isVisible = false
-        reviewBy.isVisible = false
-        add(approvedBy)
-        add(approvers)
-        add(others)
-        add(reviewBy)
-        add(reviewers)
+class ReviewersPanel(reviewers: MutableList<PRParticipant>,
+                     imagesSource: MediaSource<BufferedImage>,
+                     awtExecutor: Executor) : JPanel(FlowLayout(FlowLayout.LEADING, 2, 2)) {
+    companion object {
+        const val ALWAYS_DISPLAY_REVIEWERS_COUNT = 5
     }
 
-    fun addReviewer(label: JLabel, reviewer: PRParticipant) {
-        if (reviewer.approved) {
-            approvers.add(label)
-            approvedBy.isVisible = true
-            reviewBy.isVisible = false
-        } else {
-            if (approvers.componentCount == 0) {
-                reviewBy.isVisible = true
-            } else {
-                others.isVisible = true
+    init {
+        reviewers.sortWith(Comparator { o1, o2 -> o1.status.compareTo(o2.status) })
+        val labels: Map<PRParticipant, ReviewerItem> = reviewers.associateWith { prParticipant -> ReviewerItem(prParticipant) }
+
+        val alwaysVisibleReviewerCount = Math.min(ALWAYS_DISPLAY_REVIEWERS_COUNT, reviewers.size)
+
+        reviewers.take(alwaysVisibleReviewerCount).forEach { add(labels[it]) }
+
+        val reviewersInCombo = reviewers.size - alwaysVisibleReviewerCount
+        if (reviewersInCombo > 0) {
+            val otherReviewersButton = JButton("+$reviewersInCombo")
+            add(otherReviewersButton)
+            val height = preferredSize.height
+            otherReviewersButton.preferredSize = Dimension(height, height)
+            val menu = JBPopupMenu()
+            reviewers.takeLast(reviewersInCombo).forEach { prParticipant: PRParticipant ->
+                val itemPanel = JPanel(FlowLayout(FlowLayout.LEFT))
+                itemPanel.add(labels[prParticipant])
+                itemPanel.add(JLabel(prParticipant.user.displayName))
+                menu.add(itemPanel)
             }
-            reviewers.add(label)
+            otherReviewersButton.addMouseListener(object : MouseAdapter() {
+                override fun mouseClicked(e: MouseEvent) {
+                    menu.show(otherReviewersButton, e.x, e.y)
+                }
+            })
+            add(menu)
+        }
+
+        labels.forEach { prParticipant: PRParticipant, label: ReviewerItem ->
+            imagesSource.retrieve(URL(prParticipant.user.links.getIconHref()))
+                    .thenApply { image -> ReviewerComponentFactory.createIconForPrParticipant(image) }
+                    .thenAcceptAsync(Consumer { icon -> label.setAvatar(icon) }, awtExecutor)
+        }
+    }
+}
+
+class ReviewerItem(reviewer: PRParticipant) : JLayeredPane() {
+    private val avatarLabel: JLabel = JLabel(ReviewerComponentFactory.defaultAvatarIcon)
+
+    companion object {
+        val AVATAR_Z_INDEX = Integer(0)
+        val STATUS_ICON_Z_INDEX = Integer(1)
+    }
+
+    init {
+        val avatarSize = ReviewerComponentFactory.avatarSize
+        val statusIconSize = ReviewerComponentFactory.statusIconSize
+        val size = avatarSize + statusIconSize / 3
+        preferredSize = Dimension(size, size)
+        avatarLabel.setBounds(0, statusIconSize / 3, avatarSize, avatarSize)
+        add(avatarLabel, AVATAR_Z_INDEX)
+        val statusIcon = ReviewerComponentFactory.getStatusIcon(reviewer)
+        if (statusIcon != null) {
+            val statusLabel = JLabel(statusIcon)
+            statusLabel.setBounds(size - statusIconSize, 0, statusIconSize, statusIconSize)
+            add(statusLabel, STATUS_ICON_Z_INDEX)
         }
     }
 
-    fun setBgColor(color: Color) {
-        approvers.background = color
-        reviewers.background = color
-        background = color
+    fun setAvatar(icon: Icon) {
+        avatarLabel.icon = icon
     }
 }
