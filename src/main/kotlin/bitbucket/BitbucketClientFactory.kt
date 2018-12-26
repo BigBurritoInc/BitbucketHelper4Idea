@@ -8,7 +8,6 @@ import com.intellij.openapi.components.ServiceManager
 import http.HttpAuthRequestFactory
 import org.apache.http.impl.client.HttpClients
 import ui.Storer
-import java.net.URL
 
 object BitbucketClientFactory {
 
@@ -24,8 +23,7 @@ object BitbucketClientFactory {
         return BitbucketClient(
                 createHttpClient(),
                 HttpAuthRequestFactory(settings.login, String(password)),
-                URL(settings.url), settings.project, settings.slug, settings.login,
-                objectMapper.reader(), objectMapper.writer(), invalidCredentialsAction)
+                settings, objectMapper.reader(), objectMapper.writer(), invalidCredentialsAction)
     }
 
     private fun createHttpClient() =  HttpClients.createDefault()

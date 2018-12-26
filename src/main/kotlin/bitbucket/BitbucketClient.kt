@@ -8,27 +8,23 @@ import bitbucket.httpparams.*
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectReader
 import com.fasterxml.jackson.databind.ObjectWriter
-import com.intellij.openapi.diagnostic.Logger
 import com.palominolabs.http.url.UrlBuilder
 import http.HttpAuthRequestFactory
 import http.HttpResponseHandler
 import org.apache.http.client.HttpClient
 import org.apache.http.client.methods.HttpUriRequest
 import org.apache.http.entity.ByteArrayEntity
+import ui.Settings
 import java.net.URL
 
 class BitbucketClient(
         private val httpClient: HttpClient,
         private val httpRequestFactory: HttpAuthRequestFactory,
-        private val baseUrl: URL,
-        private val project: String,
-        private val repoSlug: String,
-        private val userSlug: String,
+        private val settings: Settings,
         objReader: ObjectReader,
         private val objWriter: ObjectWriter,
         invalidCredentialsAction: () -> Unit = {}
     ) {
-    private val log = Logger.getInstance("BitbucketClient")
     private val responseHandler = HttpResponseHandler(
             objReader, object : TypeReference<PagedResponse<PR>>() {}, invalidCredentialsAction)
 
@@ -40,19 +36,14 @@ class BitbucketClient(
         return inbox(Role.AUTHOR)
     }
 
-    fun openPRs(): List<PR> {
-        return findPRs(PRState.OPEN, PROrder.NEWEST)
-    }
-
-
     // /rest/api/1.0/projects/{projectKey}/repos/{repositorySlug}/pull-requests/{pullRequestId}/participants/{userSlug}
     fun approve(pr: PR) {
         val urlBuilder = urlBuilder().pathSegments(
-                "projects", project, "repos", repoSlug, "pull-requests", pr.id.toString(), "participants", userSlug)
+                "projects", settings.project, "repos", settings.slug, "pull-requests", pr.id.toString(), "participants", settings.login)
         println(urlBuilder.toUrlString())
         val request = httpRequestFactory.createPut(urlBuilder.toUrlString())
         request.setHeader("Content-Type", "application/json")
-        val body = objWriter.writeValueAsBytes(Approve(SimpleUser(userSlug)))
+        val body = objWriter.writeValueAsBytes(Approve(SimpleUser(settings.login)))
         val entity = ByteArrayEntity(body)
         request.entity = entity
         HttpResponseHandler.handle(httpClient.execute(request))
@@ -72,14 +63,14 @@ class BitbucketClient(
 
     private fun findPRs(state: PRState, order: PROrder, start: Start = Start.Zero): List<PR> {
         val urlBuilder = urlBuilder()
-                .pathSegments("projects", project, "repos", repoSlug, "pull-requests")
+                .pathSegments("projects", settings.project, "repos", settings.slug, "pull-requests")
         applyParameters(urlBuilder, start, order, state)
 
         val request = httpRequestFactory.createGet(urlBuilder.toUrlString())
         return replayPageRequest(request) {findPRs(state, order, Start(it))}
     }
 
-    private fun urlBuilder() = UrlBuilder.fromUrl(baseUrl).pathSegments("rest", "api", "1.0")
+    private fun urlBuilder() = UrlBuilder.fromUrl(URL(settings.url)).pathSegments("rest", "api", "1.0")
 
     private fun applyParameters(urlBuilder: UrlBuilder, vararg params: HttpRequestParameter) {
         for (param in params)
