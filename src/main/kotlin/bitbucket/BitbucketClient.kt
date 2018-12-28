@@ -23,10 +23,10 @@ class BitbucketClient(
         private val settings: Settings,
         objReader: ObjectReader,
         private val objWriter: ObjectWriter,
-        invalidCredentialsAction: () -> Unit = {}
+        private val listener: ClientListener
     ) {
     private val responseHandler = HttpResponseHandler(
-            objReader, object : TypeReference<PagedResponse<PR>>() {}, invalidCredentialsAction)
+            objReader, object : TypeReference<PagedResponse<PR>>() {}, listener)
 
     fun reviewedPRs(): List<PR> {
         return inbox(Role.REVIEWER)
@@ -38,15 +38,19 @@ class BitbucketClient(
 
     // /rest/api/1.0/projects/{projectKey}/repos/{repositorySlug}/pull-requests/{pullRequestId}/participants/{userSlug}
     fun approve(pr: PR) {
-        val urlBuilder = urlBuilder().pathSegments(
-                "projects", settings.project, "repos", settings.slug, "pull-requests", pr.id.toString(), "participants", settings.login)
-        println(urlBuilder.toUrlString())
-        val request = httpRequestFactory.createPut(urlBuilder.toUrlString())
-        request.setHeader("Content-Type", "application/json")
-        val body = objWriter.writeValueAsBytes(Approve(SimpleUser(settings.login)))
-        val entity = ByteArrayEntity(body)
-        request.entity = entity
-        HttpResponseHandler.handle(httpClient.execute(request))
+        try {
+            val urlBuilder = urlBuilder().pathSegments(
+                    "projects", settings.project, "repos", settings.slug, "pull-requests", pr.id.toString(), "participants", settings.login)
+            println(urlBuilder.toUrlString())
+            val request = httpRequestFactory.createPut(urlBuilder.toUrlString())
+            request.setHeader("Content-Type", "application/json")
+            val body = objWriter.writeValueAsBytes(Approve(SimpleUser(settings.login)))
+            val entity = ByteArrayEntity(body)
+            request.entity = entity
+            HttpResponseHandler.handle(httpClient.execute(request))
+        } catch (e: Exception) {
+            listener.requestFailed(e)
+        }
     }
 
     /**
@@ -54,11 +58,16 @@ class BitbucketClient(
      * @see <a href="https://docs.atlassian.com/bitbucket-server/rest/5.13.0/bitbucket-rest.html#idm46209336621072">inbox</a>
      */
     private fun inbox(role: Role, limit: Limit = Limit.Default, start: Start = Start.Zero): List<PR> {
-        val urlBuilder = urlBuilder().pathSegments("inbox", "pull-requests")
-        applyParameters(urlBuilder, role, start, limit)
+        return try {
+            val urlBuilder = urlBuilder().pathSegments("inbox", "pull-requests")
+            applyParameters(urlBuilder, role, start, limit)
 
-        val request = httpRequestFactory.createGet(urlBuilder.toUrlString())
-        return replayPageRequest(request) {inbox(role, limit, Start(it))}
+            val request = httpRequestFactory.createGet(urlBuilder.toUrlString())
+            replayPageRequest(request) { inbox(role, limit, Start(it)) }
+        } catch (e: Exception) {
+            listener.requestFailed(e)
+            emptyList()
+        }
     }
 
     private fun findPRs(state: PRState, order: PROrder, start: Start = Start.Zero): List<PR> {

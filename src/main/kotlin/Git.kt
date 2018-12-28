@@ -27,7 +27,7 @@ object Git: VCS {
             val branchExists = currentRepository.branches.findBranchByName(branch) != null
             val repos = listOf(currentRepository)
             if (branchExists) {
-                branchController.checkout(branch, false, repos) { /* empty callback */ }
+                branchController.checkout(branch, false, repos) { listener.run() }
             } else {
                 AsyncFetchAndCheckout(currentProject, "MyBitbucket: Fetching", GitRepositoryAction.getGitRoots(
                         currentProject, GitVcs.getInstance(currentProject))!!, currentRepository, branch, listener)
