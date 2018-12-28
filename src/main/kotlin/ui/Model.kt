@@ -56,8 +56,7 @@ object Model {
                 } else {
                     "${diff.added.size} pull requests are available"
                 }
-                val notification = notificationGroup.createNotification(message, NotificationType.INFORMATION)
-                Notifications.Bus.notify(notification, Git.currentProject())
+                showNotification(message)
             }
         }
     }
@@ -78,7 +77,7 @@ object Model {
         AppExecutorUtil.getAppScheduledExecutorService().execute {
             try {
                 BitbucketClientFactory.createClient().approve(pr)
-                approvedNotification(pr)
+                showNotification("PR #${pr.id} is approved")
                 ApplicationManager.getApplication().invokeLater {
                     callback.accept(true)
                 }
@@ -89,10 +88,9 @@ object Model {
         }
     }
 
-    private fun approvedNotification(pr: PR) {
+    fun showNotification(message: String, type: NotificationType = NotificationType.INFORMATION) {
         ApplicationManager.getApplication().invokeLater{
-            val message = "PR #${pr.id} is approved"
-            val notification = notificationGroup.createNotification(message, NotificationType.INFORMATION)
+            val notification = notificationGroup.createNotification(message, type)
             Notifications.Bus.notify(notification, Git.currentProject())
         }
     }

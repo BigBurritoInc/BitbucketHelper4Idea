@@ -51,7 +51,7 @@ class BitbucketHelperConfigurable : SearchableConfigurable, Configurable.NoScrol
 
     override fun createComponent(): JComponent? {
         val project = CommonDataKeys.PROJECT.getData(DataManager.getInstance().getDataContext()) ?: return JLabel("Empty project!")
-        val storer = ServiceManager.getService<Storer>(project, Storer::class.java);
+        val storer = ServiceManager.getService<Storer>(project, Storer::class.java)
         if (storer != null)
             settings = storer.settings
 
@@ -102,11 +102,11 @@ data class Settings(var project: String = "", var slug: String = "", var login: 
 class Storer : PersistentStateComponent<Settings> {
     val settings:Settings = Settings()
 
-    override fun getState(): Settings? {
+    override fun getState(): Settings {
         return settings
     }
 
     override fun loadState(state: Settings) {
-        XmlSerializerUtil.copyBean(state, settings);
+        XmlSerializerUtil.copyBean(state, settings)
     }
 }
