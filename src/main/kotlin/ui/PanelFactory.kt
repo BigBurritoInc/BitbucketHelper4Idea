@@ -1,5 +1,6 @@
 package ui
 
+import bitbucket.data.PR
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.ui.components.JBScrollPane
 import java.awt.image.BufferedImage
@@ -11,7 +12,11 @@ var imagesSource: MediaSource<BufferedImage> = ImagesSource()
 var awtExecutor: Executor = Executor { command -> ApplicationManager.getApplication().invokeLater(command) }
 
 fun createReviewPanel(): Panel {
-    return object : Panel(imagesSource, awtExecutor) {
+    return object : Panel() {
+        override fun createPRComponent(pr: PR): PRComponent {
+            return PRComponent(pr, imagesSource, awtExecutor)
+        }
+
         override fun ownUpdated(diff: Diff) {}
 
         override fun reviewedUpdated(diff: Diff) {
@@ -21,7 +26,11 @@ fun createReviewPanel(): Panel {
 }
 
 fun createOwnPanel(): Panel {
-    return object : Panel(imagesSource, awtExecutor) {
+    return object : Panel() {
+        override fun createPRComponent(pr: PR): PRComponent {
+            return OwnPRComponent(pr, imagesSource, awtExecutor)
+        }
+
         override fun ownUpdated(diff: Diff) {
             dataUpdated(diff)
         }

@@ -15,7 +15,7 @@ import java.util.function.Function
 import javax.swing.*
 
 
-class PRComponent(
+open class PRComponent(
         val pr: PR,
         private val imagesSource: MediaSource<BufferedImage>,
         private val awtExecutor: Executor): JPanel() {
@@ -63,19 +63,7 @@ class PRComponent(
         c.weightx = 0.0
         c.gridx = 1
         val buttonSize = Dimension(120, 24)
-        approveBtn.preferredSize = buttonSize
-        approveBtn.addActionListener {
-            Model.approve(pr, Consumer {approved ->
-                if (approved) {
-                    approveBtn.text = "Approved"
-                    approveBtn.isEnabled = false
-                }
-            })
-        }
-        approveBtn.foreground = approveColor
-        approveBtn.font = UIUtil.getButtonFont()
-        add(approveBtn, c)
-
+        addApproveButton(buttonSize)
         checkoutBtn.preferredSize = buttonSize
         checkoutBtn.maximumSize = buttonSize
         checkoutBtn.font = UIUtil.getButtonFont()
@@ -95,6 +83,21 @@ class PRComponent(
         }
 
         border = UIUtil.getTextFieldBorder()
+    }
+
+    open fun addApproveButton(buttonSize: Dimension) {
+        approveBtn.preferredSize = buttonSize
+        approveBtn.addActionListener {
+            Model.approve(pr, Consumer { approved ->
+                if (approved) {
+                    approveBtn.text = "Approved"
+                    approveBtn.isEnabled = false
+                }
+            })
+        }
+        approveBtn.foreground = approveColor
+        approveBtn.font = UIUtil.getButtonFont()
+        add(approveBtn, c)
     }
 
     fun currentBranchChanged(branch: String) {
@@ -134,6 +137,17 @@ class Link(url: URL, txt: String): JButton() {
         margin = innerMargin
         isRolloverEnabled = false
         addActionListener { BrowserUtil.browse(url) }
+    }
+}
+
+/** A pull-request where an author is yourself */
+class OwnPRComponent(ownPR: PR,
+                     imagesSource: MediaSource<BufferedImage>,
+                     awtExecutor: Executor)
+    : PRComponent(ownPR, imagesSource, awtExecutor) {
+
+    override fun addApproveButton(buttonSize: Dimension) {
+        //Do not add an approve button for own PRs
     }
 }
 
