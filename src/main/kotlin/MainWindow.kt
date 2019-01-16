@@ -1,4 +1,5 @@
 import bitbucket.BitbucketClientFactory
+import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
@@ -12,7 +13,7 @@ import java.awt.event.KeyListener
 import javax.swing.*
 
 
-class MainWindow : ToolWindowFactory {
+class MainWindow : ToolWindowFactory, DumbAware {
 
     var window: ToolWindow? = null
 
@@ -37,7 +38,7 @@ class MainWindow : ToolWindowFactory {
 
         val listener = {
             BitbucketClientFactory.password = passwordField.password
-            UpdateTaskHolder.reschedule()
+            UpdateTaskHolder.scheduleNew()
             passwordField.text = ""
             contentManager.setSelectedContent(reviewingContent)
         }

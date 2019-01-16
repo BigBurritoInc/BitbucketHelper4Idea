@@ -14,7 +14,7 @@ object BitbucketClientFactory {
     var password:CharArray = kotlin.CharArray(0)
     val storer = ServiceManager.getService<Storer>(CommonDataKeys.PROJECT.getData(DataManager.getInstance().getDataContext())!!, Storer::class.java)
 
-    fun createClient(invalidCredentialsAction: () -> Unit = {}): BitbucketClient {
+    fun createClient(listener: ClientListener = object: ClientListener {}): BitbucketClient {
 
         val objectMapper = ObjectMapper()
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
@@ -23,7 +23,7 @@ object BitbucketClientFactory {
         return BitbucketClient(
                 createHttpClient(),
                 HttpAuthRequestFactory(settings.login, String(password)),
-                settings, objectMapper.reader(), objectMapper.writer(), invalidCredentialsAction)
+                settings, objectMapper.reader(), objectMapper.writer(), listener)
     }
 
     private fun createHttpClient() =  HttpClients.createDefault()

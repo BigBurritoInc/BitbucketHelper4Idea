@@ -1,5 +1,6 @@
 package http
 
+import bitbucket.ClientListener
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectReader
 import com.intellij.openapi.diagnostic.Logger
@@ -10,10 +11,10 @@ import java.io.InputStream
 class HttpResponseHandler<T>(
         private val objectReader: ObjectReader,
         private val bodyType: TypeReference<T>,
-        private val invalidCredentialsAction: () -> Unit) {
+        private val listener: ClientListener) {
 
     fun handle(response: HttpResponse): T =
-            process(response, { objectReader.forType(bodyType).readValue(it) }, invalidCredentialsAction)
+            process(response, { objectReader.forType(bodyType).readValue(it) }, listener)
 
     companion object {
         private val log = Logger.getInstance("HttpResponseHandler")
@@ -27,7 +28,7 @@ class HttpResponseHandler<T>(
         private fun  <T> process(
                 response: HttpResponse,
                 mapper: (InputStream) -> T,
-                invalidCredentialsAction: () -> Unit = {}
+                listener: ClientListener = object: ClientListener {}
         ): T {
             val status = response.statusLine
             val statusCode =  status.statusCode
@@ -35,7 +36,7 @@ class HttpResponseHandler<T>(
             return when (statusCode) {
                 HttpStatus.SC_OK -> mapper.invoke(response.entity.content)
                 HttpStatus.SC_UNAUTHORIZED -> {
-                    invalidCredentialsAction()
+                    listener.invalidCredentials()
                     throw UnauthorizedException
                 }
                 else -> throw RuntimeException("Status code: ${status.statusCode}, reason ${status.reasonPhrase}")
