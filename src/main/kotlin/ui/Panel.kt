@@ -1,16 +1,13 @@
 package ui
 
+import bitbucket.data.PR
 import java.awt.GridBagLayout
 import javax.swing.JPanel
 import java.awt.GridBagConstraints
 import java.awt.Insets
-import java.awt.image.BufferedImage
-import java.util.concurrent.Executor
 
 
-abstract class Panel(
-    private val imagesSource: MediaSource<BufferedImage>,
-    private val awtExecutor: Executor) : JPanel(), Listener {
+abstract class Panel : JPanel(), Listener {
 
     private val gbc: GridBagConstraints = GridBagConstraints()
 
@@ -26,7 +23,7 @@ abstract class Panel(
 
     fun dataUpdated(diff: Diff) {
         diff.added.values.sortedBy { it.updatedAt }
-                .forEach{ add(PRComponent(it, imagesSource, awtExecutor), gbc, 0) }
+                .forEach{ add(createPRComponent(it), gbc, 0) }
 
         synchronized(treeLock) {
             for (i in 0 until componentCount) {
@@ -37,6 +34,8 @@ abstract class Panel(
         }
         repaint()
     }
+
+    abstract fun createPRComponent(pr: PR): PRComponent
 
     override fun currentBranchChanged(branchName: String) {
         synchronized(treeLock) {
