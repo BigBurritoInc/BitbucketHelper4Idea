@@ -49,16 +49,16 @@ object PanelRunner {
 
         for (k in 0..id % 4)
             to += "8984"
-
+        val repo = Repository("slug", Project("project_key"))
         return PR(id, title,
                 PRParticipant(User("har993", "billybobharley.is.here@tdameritrade.com", 2, "Billy Bob Harley",
-                        Links(listOf(Links.Link("https://developer.atlassian.com/bitbucket/api/2/reference/")))), false),
+                        Links(listOf(Links.Link("https://developer.atlassian.com/bitbucket/api/2/reference/")))), false, ParticipantStatus.UNAPPROVED),
                 false,
-                Branch("$br$id"),
-                Branch(to), listOf(PRParticipant(User("reviewer1", "reviewer1@mail.com", 3, "First Reviewer",
-                Links(listOf(Links.Link("https://www.atlassian.com/software/bitbucket")))), false),
+                Branch("$br$id", repo),
+                Branch(to, repo), listOf(PRParticipant(User("reviewer1", "reviewer1@mail.com", 3, "First Reviewer",
+                Links(listOf(Links.Link("https://www.atlassian.com/software/bitbucket")))), false, ParticipantStatus.NEEDS_WORK),
                 PRParticipant(User("reviewer2", "reviewer2@mail.com", 4, "Second Reviewer",
-                Links(listOf(Links.Link("https://www.atlassian.com/software/bitbucket")))), true)),
+                Links(listOf(Links.Link("https://www.atlassian.com/software/bitbucket")))), true, ParticipantStatus.APPROVED)),
                 Date(System.currentTimeMillis()), Date(System.currentTimeMillis()),
                 Links(listOf(Links.Link("https://developer.atlassian.com/bitbucket/api/2/reference/")))
         )
