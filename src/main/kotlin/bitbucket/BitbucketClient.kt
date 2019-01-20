@@ -63,10 +63,17 @@ class BitbucketClient(
             applyParameters(urlBuilder, role, start, limit)
 
             val request = httpRequestFactory.createGet(urlBuilder.toUrlString())
-            replayPageRequest(request) { inbox(role, limit, Start(it)) }
+            filterByProject(replayPageRequest(request) { inbox(role, limit, Start(it)) })
         } catch (e: Exception) {
             listener.requestFailed(e)
             emptyList()
+        }
+    }
+
+    private fun filterByProject(prs: List<PR>): List<PR> {
+        return prs.filter {
+            it.projectKey.equals(settings.project, true)
+            && it.repoSlug.equals(settings.slug, true)
         }
     }
 

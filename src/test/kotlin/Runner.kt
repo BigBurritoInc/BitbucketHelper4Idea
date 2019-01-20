@@ -1,4 +1,5 @@
 import bitbucket.BitbucketClient
+import bitbucket.ClientListener
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import http.HttpAuthRequestFactory
@@ -18,9 +19,18 @@ object Runner {
                 HttpClients.createDefault(),
                 HttpAuthRequestFactory(args[0], args[1]),
                 settings,
-                objectMapper.reader(), objectMapper.writer())
+                objectMapper.reader(), objectMapper.writer(),
+                object: ClientListener {
+                    override fun invalidCredentials() {
+                        println("invalidCredentials")
+                    }
+
+                    override fun requestFailed(e: Exception) {
+                        println("requestFailed: $e")
+                    }
+                })
 
         client.ownPRs().forEach { println("OwnPR: $it") }
-        client.reviewedPRs().forEach { println("OwnPR: $it") }
+        client.reviewedPRs().forEach { println("ReviewedPR: $it") }
     }
 }

@@ -22,6 +22,12 @@ data class PR(@JsonProperty("id") val id: Long,
     val toBranch: String
         get() = to.name
 
+    val projectKey: String
+        get() = to.repository.project.key
+
+    val repoSlug: String
+        get() = to.repository.slug
+
     val createdAt: ZonedDateTime
         get() = ZonedDateTime.ofInstant(createdDate.toInstant(), ZoneId.of("UTC"))
 
