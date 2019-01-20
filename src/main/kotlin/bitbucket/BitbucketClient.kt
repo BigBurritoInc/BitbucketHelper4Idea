@@ -8,6 +8,7 @@ import bitbucket.httpparams.*
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectReader
 import com.fasterxml.jackson.databind.ObjectWriter
+import com.intellij.openapi.diagnostic.Logger
 import com.palominolabs.http.url.UrlBuilder
 import http.HttpAuthRequestFactory
 import http.HttpResponseHandler
@@ -25,6 +26,7 @@ class BitbucketClient(
         private val objWriter: ObjectWriter,
         private val listener: ClientListener
     ) {
+    private val log = Logger.getInstance("BitbucketClient")
     private val responseHandler = HttpResponseHandler(
             objReader, object : TypeReference<PagedResponse<PR>>() {}, listener)
 
@@ -89,10 +91,15 @@ class BitbucketClient(
     private fun sendRequest(request : HttpUriRequest ) = responseHandler.handle(httpClient.execute(request))
 
     private fun replayPageRequest(request: HttpUriRequest, replay: (Int) -> List<PR>): List<PR> {
-        val pagedResponse = sendRequest(request)
-        val prs = ArrayList(pagedResponse.values)
-        if (!pagedResponse.isLastPage)
-            prs.addAll(replay.invoke(pagedResponse.nextPageStart))
-        return prs
+        try {
+            val pagedResponse = sendRequest(request)
+            val prs = ArrayList(pagedResponse.values)
+            if (!pagedResponse.isLastPage)
+                prs.addAll(replay.invoke(pagedResponse.nextPageStart))
+            return prs
+        } catch (e: HttpResponseHandler.UnauthorizedException) {
+            log.info(e)
+        }
+        return emptyList()
     }
 }

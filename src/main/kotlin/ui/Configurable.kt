@@ -4,12 +4,15 @@ import com.intellij.ide.DataManager
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.components.*
 import com.intellij.openapi.options.Configurable
+import com.intellij.openapi.options.ConfigurationException
 import com.intellij.openapi.options.SearchableConfigurable
 import java.awt.BorderLayout
 import javax.swing.*
 
 import java.awt.*
 import com.intellij.util.xmlb.XmlSerializerUtil
+import java.net.MalformedURLException
+import java.net.URL
 
 
 /**
@@ -37,10 +40,13 @@ class BitbucketHelperConfigurable : SearchableConfigurable, Configurable.NoScrol
     }
 
     override fun apply() {
-        settings.project = projectField.text
-        settings.slug = slugField.text
-        settings.url = urlField.text
-        settings.login = loginField.text
+        val newSettings = Settings()
+        newSettings.project = projectField.text
+        newSettings.slug = slugField.text
+        newSettings.url = urlField.text
+        newSettings.login = loginField.text
+        newSettings.validate()
+        settings.copyFrom(newSettings)
         UpdateTaskHolder.reschedule()
     }
 
@@ -96,7 +102,25 @@ class BitbucketHelperConfigurable : SearchableConfigurable, Configurable.NoScrol
     }
 }
 
-data class Settings(var project: String = "", var slug: String = "", var login: String = "", var url: String = "")
+data class Settings(var project: String = "", var slug: String = "", var login: String = "", var url: String = "") {
+
+    fun copyFrom(other: Settings) {
+        project = other.project
+        slug = other.slug
+        login = other.login
+        url = other.url
+    }
+
+    fun validate() {
+        if (project.isBlank() || slug.isBlank() || login.isBlank() || url.isBlank())
+            throw ConfigurationException("Fill all the BitBucket settings", "Some settings are blank")
+        try {
+            URL(url)
+        } catch (e: MalformedURLException) {
+            throw ConfigurationException(e.message, "Malformed BitBucket URL")
+        }
+    }
+}
 
 @State(name = "BitbucketHelper4Idea", storages = arrayOf(Storage(StoragePathMacros.WORKSPACE_FILE)))
 class Storer : PersistentStateComponent<Settings> {
@@ -110,3 +134,8 @@ class Storer : PersistentStateComponent<Settings> {
         XmlSerializerUtil.copyBean(state, settings)
     }
 }
+
+fun getStorerService(): Storer =
+        ServiceManager.getService<Storer>(CommonDataKeys.PROJECT.getData(DataManager.getInstance().getDataContext())!!,
+        Storer::class.java)
+
