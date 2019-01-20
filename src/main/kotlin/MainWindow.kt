@@ -1,8 +1,10 @@
 import bitbucket.BitbucketClientFactory
+import com.intellij.openapi.options.ConfigurationException
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
+import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.panels.VerticalLayout
 import com.intellij.ui.content.Content
 import com.intellij.ui.content.ContentManager
@@ -10,6 +12,7 @@ import ui.*
 import java.awt.*
 import java.awt.event.KeyEvent
 import java.awt.event.KeyListener
+import java.net.ConnectException
 import javax.swing.*
 
 
@@ -35,13 +38,23 @@ class MainWindow : ToolWindowFactory, DumbAware {
     private fun createLoginPanel(contentManager: ContentManager, reviewingContent: Content): JPanel {
         val wrapper = JPanel(BorderLayout())
         val passwordField = JPasswordField()
-
+        val messageField = JBLabel()
+        val button = JButton("Login")
+        button.isEnabled = false
         val listener = {
-            BitbucketClientFactory.password = passwordField.password
-            UpdateTaskHolder.scheduleNew()
-            passwordField.text = ""
-            contentManager.setSelectedContent(reviewingContent)
+            try {
+                messageField.text = ""
+                getStorerService().settings.validate()
+                BitbucketClientFactory.password = passwordField.password
+                UpdateTaskHolder.scheduleNew()
+                passwordField.text = ""
+                button.isEnabled = false
+                contentManager.setSelectedContent(reviewingContent)
+            } catch (e: ConfigurationException) {
+                messageField.text = e.title + ". " + e.message
+            }
         }
+        button.addActionListener {listener.invoke()}
 
         passwordField.addKeyListener(object : KeyListener{
             override fun keyTyped(e: KeyEvent?) { }
@@ -51,16 +64,15 @@ class MainWindow : ToolWindowFactory, DumbAware {
                     listener.invoke()
             }
 
-            override fun keyReleased(e: KeyEvent?) { }
+            override fun keyReleased(e: KeyEvent?) {
+                button.isEnabled = !passwordField.password.isEmpty()
+            }
         })
-
-        val button = JButton("Login")
-        button.addActionListener {listener.invoke()}
-
         val panel = JPanel(VerticalLayout(5))
         panel.border = BorderFactory.createEmptyBorder(5, 5, 5, 5)
         panel.add(passwordField)
         panel.add(button)
+        panel.add(messageField)
         wrapper.add(panel, BorderLayout.NORTH)
         return wrapper
     }
