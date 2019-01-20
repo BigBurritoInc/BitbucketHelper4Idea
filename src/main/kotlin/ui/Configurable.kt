@@ -65,7 +65,7 @@ class BitbucketHelperConfigurable : SearchableConfigurable, Configurable.NoScrol
 
         mainPanel.add(JLabel("Project"), gbc)
         gbc.gridy++
-        mainPanel.add(JLabel("Slug"), gbc)
+        mainPanel.add(JLabel("Repository"), gbc)
         gbc.gridy++
         mainPanel.add(JLabel("Bitbucket URL"), gbc)
         gbc.gridy++
