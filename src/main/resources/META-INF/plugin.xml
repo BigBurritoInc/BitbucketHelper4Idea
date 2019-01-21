@@ -1,5 +1,5 @@
 <idea-plugin>
-    <id>com.devex.BitbucketHelper4Idea</id>
+    <id>myBitbucket</id>
     <name>myBitbucket</name>
     <vendor email="bitbucket.plugin@gmail.com" url="https://github.com/BigBurritoInc">Big Burrito Inc.</vendor>
 
@@ -12,12 +12,12 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <!-- todo: a pretty icon needed -->
-        <toolWindow id="MyBitbucket" anchor="right"
+        <toolWindow id="myBitbucket" anchor="right"
                     icon="bitbucket-13.png" factoryClass="MainWindow">
 
         </toolWindow>
         <applicationConfigurable groupId="root" groupWeight="1" instance="ui.BitbucketHelperConfigurable" id="preferences.BitbucketHelper4Idea"
-                                 displayName="Bitbucket"/>
+                                 displayName="myBitbucket"/>
         <projectService serviceInterface="ui.Storer"
                         serviceImplementation="ui.Storer"/>
     </extensions>

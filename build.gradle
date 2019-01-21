@@ -4,7 +4,7 @@ plugins {
 }
 
 group 'BigBurritoInc'
-version '0.7'
+version '0.1'
 
 repositories {
     mavenCentral()
@@ -27,10 +27,10 @@ compileTestKotlin {
 intellij {
     version '2018.3'
     plugins 'git4idea'
-    pluginName 'BitbucketHelper4Idea'
+    pluginName 'myBitbucket'
     alternativeIdePath 'C:\\Program Files\\JetBrains\\IntelliJ IDEA Community Edition 2018.2.6'
 }
 patchPluginXml {
     changeNotes """
-      v.0.7 First public version is released"""
+      v.0.1 First public version is released"""
 }
