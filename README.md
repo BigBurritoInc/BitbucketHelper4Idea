@@ -21,4 +21,4 @@ Bitbucket Server REST API 1.0
 Was tested using IDEA 2017.X, 2018.X and Bitbucket Server v.4.9.1. 
 
 ## Reporting an issue
-If you find any issue, please report it to [GitHub](https://github.com/BigBurritoInc/BitbucketHelper4Idea/issues) or [email us](mailto:bitbucket.plugin@gmail.com) bitbucket.plugin@gmail.com
+If you find any issue, please report it to [GitHub](https://github.com/BigBurritoInc/BitbucketHelper4Idea/issues) or [email us](mailto:bitbucket.plugin@gmail.com)
