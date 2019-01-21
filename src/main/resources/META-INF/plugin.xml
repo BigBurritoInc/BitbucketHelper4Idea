@@ -1,11 +1,10 @@
 <idea-plugin>
-    <id>com.devex.BitbucketHelper4Idea</id>
-    <name>Plugin display name here</name>
-    <vendor email="support@yourcompany.com" url="http://www.yourcompany.com">YourCompany</vendor>
+    <id>myBitbucket</id>
+    <name>myBitbucket</name>
+    <vendor email="bitbucket.plugin@gmail.com" url="https://github.com/BigBurritoInc">Big Burrito Inc.</vendor>
 
     <description><![CDATA[
-    Enter short description for your plugin here.<br>
-    <em>most HTML tags may be used</em>
+    Intellij Idea plugin that allows to see assigned Bitbucket Server pull-requests and checkout their branches using Git
     ]]></description>
 
     <depends>com.intellij.modules.lang</depends>
@@ -13,12 +12,12 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <!-- todo: a pretty icon needed -->
-        <toolWindow id="MyBitbucket" anchor="right"
+        <toolWindow id="myBitbucket" anchor="right"
                     icon="bitbucket-13.png" factoryClass="MainWindow">
 
         </toolWindow>
         <applicationConfigurable groupId="root" groupWeight="1" instance="ui.BitbucketHelperConfigurable" id="preferences.BitbucketHelper4Idea"
-                                 displayName="Bitbucket"/>
+                                 displayName="myBitbucket"/>
         <projectService serviceInterface="ui.Storer"
                         serviceImplementation="ui.Storer"/>
     </extensions>
