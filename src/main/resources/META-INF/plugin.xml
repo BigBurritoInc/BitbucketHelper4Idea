@@ -4,7 +4,7 @@
     <vendor email="bitbucket.plugin@gmail.com" url="https://github.com/BigBurritoInc">Big Burrito Inc.</vendor>
 
     <description><![CDATA[
-    Intellij Idea plugin that allows to see assigned Bitbucket Server pull-requests and checkout their branches using Git
+    See the list of assigned Bitbucket Server pull-requests, approve them, checkout corresponding branches using Git
     ]]></description>
 
     <depends>com.intellij.modules.lang</depends>
