@@ -29,8 +29,9 @@ intellij {
     plugins 'git4idea'
     pluginName 'myBitbucket'
     alternativeIdePath 'C:\\Program Files\\JetBrains\\IntelliJ IDEA Community Edition 2018.2.6'
+    updateSinceUntilBuild false
 }
 patchPluginXml {
     changeNotes """
-      v.0.1 First public version is released"""
+      v.0.1: 2019.01.21 First public version is released"""
 }

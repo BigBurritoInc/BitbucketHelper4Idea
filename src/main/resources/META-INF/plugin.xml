@@ -2,11 +2,16 @@
     <id>myBitbucket</id>
     <name>myBitbucket</name>
     <vendor email="bitbucket.plugin@gmail.com" url="https://github.com/BigBurritoInc">Big Burrito Inc.</vendor>
-
     <description><![CDATA[
-    See the list of assigned Bitbucket Server pull-requests, approve them, checkout corresponding branches using Git
+    <p>See the list of assigned Bitbucket Server pull-requests, approve them, checkout corresponding branches using Git</p>
+    <br/>
+    <p>
+    Check <a href="https://github.com/BigBurritoInc/BitbucketHelper4Idea/blob/master/README.md">readme</a> for the latest info about the plugin.
+    Report any issue to the <a href="https://github.com/BigBurritoInc/BitbucketHelper4Idea/issues">GitHub tracker</a>
+    or email to bitbucket.plugin@gmail.com
+    </p>
     ]]></description>
-
+    <idea-version since-build="145.0"/>
     <depends>com.intellij.modules.lang</depends>
     <depends>Git4Idea</depends>
 
