@@ -1,6 +1,7 @@
 package ui
 
 import bitbucket.data.PR
+import java.awt.Component
 import java.awt.GridBagLayout
 import javax.swing.JPanel
 import java.awt.GridBagConstraints
@@ -25,13 +26,13 @@ abstract class Panel : JPanel(), Listener {
         diff.added.values.sortedBy { it.updatedAt }
                 .forEach{ add(createPRComponent(it), gbc, 0) }
 
-        synchronized(treeLock) {
-            for (i in 0 until componentCount) {
-                val component = getComponent(i) as PRComponent
-                if (diff.removed.containsKey(component.pr.id))
-                    remove(i)
-            }
+        val toRemove = mutableListOf<Component>()
+        for (i in 0 until componentCount) {
+            val component = getComponent(i) as PRComponent
+            if (diff.removed.containsKey(component.pr.id))
+                toRemove.add(component)
         }
+        toRemove.forEach { remove(it) }
         repaint()
     }
 
