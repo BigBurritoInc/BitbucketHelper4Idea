@@ -12,7 +12,6 @@ import ui.*
 import java.awt.*
 import java.awt.event.KeyEvent
 import java.awt.event.KeyListener
-import java.net.ConnectException
 import javax.swing.*
 
 
@@ -37,6 +36,7 @@ class MainWindow : ToolWindowFactory, DumbAware {
 
     private fun createLoginPanel(contentManager: ContentManager, reviewingContent: Content): JPanel {
         val wrapper = JPanel(BorderLayout())
+        val passwordLabel = JBLabel("Password:")
         val passwordField = JPasswordField()
         val messageField = JBLabel()
         val button = JButton("Login")
@@ -70,6 +70,7 @@ class MainWindow : ToolWindowFactory, DumbAware {
         })
         val panel = JPanel(VerticalLayout(5))
         panel.border = BorderFactory.createEmptyBorder(5, 5, 5, 5)
+        panel.add(passwordLabel)
         panel.add(passwordField)
         panel.add(button)
         panel.add(messageField)
