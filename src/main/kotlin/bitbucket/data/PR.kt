@@ -11,7 +11,7 @@ data class PR(@JsonProperty("id") val id: Long,
               @JsonProperty("closed") val closed: Boolean,
               @JsonProperty("fromRef") private val from: Branch,
               @JsonProperty("toRef") private val to: Branch,
-              @JsonProperty("reviewers") val reviewers: List<PRParticipant>,
+              @JsonProperty("reviewers") val reviewers: Set<PRParticipant>,
               @JsonProperty("createdDate") private val createdDate: Date,
               @JsonProperty("updatedDate") private val updatedDate: Date,
               @JsonProperty("links") val links: Links) {
