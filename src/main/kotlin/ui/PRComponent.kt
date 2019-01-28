@@ -83,6 +83,7 @@ open class PRComponent(
         }
 
         border = UIUtil.getTextFieldBorder()
+        maximumSize = Dimension(Integer.MAX_VALUE, 160)
     }
 
     open fun addApproveButton(buttonSize: Dimension) {

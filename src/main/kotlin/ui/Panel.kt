@@ -1,37 +1,30 @@
 package ui
 
 import bitbucket.data.PR
-import java.awt.GridBagLayout
+import java.awt.Component
 import javax.swing.JPanel
-import java.awt.GridBagConstraints
-import java.awt.Insets
+import javax.swing.BoxLayout
+
+
 
 
 abstract class Panel : JPanel(), Listener {
 
-    private val gbc: GridBagConstraints = GridBagConstraints()
-
     init {
-        val layout = GridBagLayout()
-        gbc.fill = GridBagConstraints.HORIZONTAL
-        gbc.weightx = 1.0
-        gbc.gridx = 0
-        gbc.anchor = GridBagConstraints.WEST
-        gbc.insets = Insets(3, 3, 3, 3)
-        setLayout(layout)
+        layout = BoxLayout(this, BoxLayout.Y_AXIS)
     }
 
     fun dataUpdated(diff: Diff) {
         diff.added.values.sortedBy { it.updatedAt }
-                .forEach{ add(createPRComponent(it), gbc, 0) }
+                .forEach{ add(createPRComponent(it), 0) }
 
-        synchronized(treeLock) {
-            for (i in 0 until componentCount) {
-                val component = getComponent(i) as PRComponent
-                if (diff.removed.containsKey(component.pr.id))
-                    remove(i)
-            }
+        val toRemove = mutableListOf<Component>()
+        for (i in 0 until componentCount) {
+            val component = getComponent(i) as PRComponent
+            if (diff.removed.containsKey(component.pr.id))
+                toRemove.add(component)
         }
+        toRemove.forEach { remove(it) }
         repaint()
     }
 
