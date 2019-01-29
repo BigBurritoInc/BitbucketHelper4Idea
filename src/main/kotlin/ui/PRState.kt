@@ -7,7 +7,7 @@ class PRState(private val prsMap: Map<Long, PR> = HashMap()) {
         val newMap = prs.map { it.id to it }.toMap()
         val removed = prsMap.filterKeys { !newMap.containsKey(it) }
         val added = newMap.filterKeys { !prsMap.containsKey(it) }
-        val updated = prsMap.filterKeys { newMap.containsKey(it) && newMap[it]!! != prsMap[it] }
+        val updated = newMap.filterKeys { prsMap.containsKey(it) && prsMap[it] != newMap[it] }
         return Diff(added, updated, removed)
     }
 
