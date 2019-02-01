@@ -25,6 +25,13 @@ abstract class Panel : JPanel(), Listener {
                 toRemove.add(component)
         }
         toRemove.forEach { remove(it) }
+        for (i in 0 until componentCount) {
+            val component = getComponent(i) as PRComponent
+            if (diff.updated.containsKey(component.pr.id)) {
+                remove(component)
+                add(createPRComponent(diff.updated[component.pr.id]!!), i)
+            }
+        }
         repaint()
     }
 
