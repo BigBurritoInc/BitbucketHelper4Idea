@@ -150,7 +150,11 @@ class ReviewersPanel(reviewers: MutableList<PRParticipant>,
 
         val reviewersInCombo = reviewers.size - alwaysVisibleReviewerCount
         if (reviewersInCombo > 0) {
-            val otherReviewersButton = JButton("+$reviewersInCombo")
+            val otherReviewersButton = JLayeredPane()
+            val realButton = JButton("+$reviewersInCombo")
+            val avatarSize = ReviewerComponentFactory.avatarSize
+            realButton.setBounds(0, ReviewerComponentFactory.statusIconSize / 3, avatarSize, avatarSize)
+            otherReviewersButton.add(realButton)
             this.add(otherReviewersButton)
             val height = this.preferredSize.height
             otherReviewersButton.preferredSize = Dimension(height, height)
@@ -161,7 +165,7 @@ class ReviewersPanel(reviewers: MutableList<PRParticipant>,
                 itemPanel.add(JLabel(prParticipant.user.displayName))
                 menu.add(itemPanel)
             }
-            otherReviewersButton.addMouseListener(object : MouseAdapter() {
+            realButton.addMouseListener(object : MouseAdapter() {
                 override fun mouseClicked(e: MouseEvent) {
                     menu.show(otherReviewersButton, e.x, e.y)
                 }
