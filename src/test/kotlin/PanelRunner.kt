@@ -33,7 +33,7 @@ object PanelRunner {
         }
         panel.dataUpdated(Diff(map, emptyMap(), emptyMap()))
         panel.currentBranchChanged("feature/TOSX-1980-it-is-a-feature-that-has-a-workitem-branch3")
-        frame.contentPane.add(wrapIntoScroll(panel))
+        frame.contentPane.add(wrapIntoJBScroll(panel))
 
         frame.pack()
         frame.isVisible = true

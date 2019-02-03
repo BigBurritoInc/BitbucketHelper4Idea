@@ -5,13 +5,16 @@ import bitbucket.data.PRParticipant
 import com.intellij.ide.BrowserUtil
 import com.intellij.openapi.ui.JBPopupMenu
 import com.intellij.ui.components.JBLabel
+import com.intellij.ui.components.labels.LinkLabel
+import com.intellij.ui.components.panels.HorizontalLayout
 import com.intellij.util.ui.UIUtil
-import com.intellij.util.ui.UIUtil.ComponentStyle.MINI
 import java.awt.*
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.awt.image.BufferedImage
 import java.net.URL
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 import java.util.*
 import java.util.concurrent.Executor
 import java.util.function.Consumer
@@ -20,114 +23,99 @@ import javax.swing.*
 
 open class PRComponent(
         val pr: PR,
-        private val imagesSource: MediaSource<BufferedImage>,
-        private val awtExecutor: Executor) : JPanel() {
+        imagesSource: MediaSource<BufferedImage>,
+        awtExecutor: Executor) : JPanel() {
 
     private val approveColor = Color(89, 168, 105)
 
     private val checkoutBtn = JButton("▼ Checkout")
     private val approveBtn = JButton("Approve")
-
-    private val title: Link
-    private val toBranch: JBLabel
-    private val author: JBLabel
+    private val prLink: JLabel
+    private val targetBranchLabel: JLabel
+    private val authorLabel: JBLabel
     private val reviewersPanel: ReviewersPanel
-    private val c = GridBagConstraints()
 
-    init {
-        layout = GridBagLayout()
-
-        c.gridwidth = 3
-        c.anchor = GridBagConstraints.WEST
-
-        title = Link(URL(pr.links.getSelfHref()), pr.title)
-        c.insets = Insets(4, 18, 2, 2)
-        c.gridx = 0
-        c.gridy = 0
-        add(title, c)
-
-        toBranch = JBLabel("To: ${pr.toBranch}", MINI)
-        toBranch.preferredSize = Dimension(120, 30)
-        c.insets = Insets(4, 20, 0, 2)
-        c.ipady = 0
-        c.gridx = 0
-        c.gridy = 1
-        add(toBranch, c)
-
-        c.gridwidth = 1
-        author = JBLabel("<html>By: <b>${pr.author.user.displayName}</b></html>", MINI)
-        author.preferredSize = Dimension(200, 30)
-        c.weightx = 0.0
-        c.gridx = 0
-        c.gridy = 2
-        c.insets = Insets(4, 20, 8, 2)
-        add(author, c)
-
-        c.weightx = 0.0
-        c.gridx = 1
-        val buttonSize = Dimension(120, 24)
-        addApproveButton(buttonSize)
-        checkoutBtn.preferredSize = buttonSize
-        checkoutBtn.maximumSize = buttonSize
-        checkoutBtn.font = UIUtil.getButtonFont()
-        add(checkoutBtn, c)
-        checkoutBtn.addActionListener { Model.checkout(pr) }
-
-        c.gridx = 2
-        c.anchor = GridBagConstraints.WEST
-        c.weightx = 1.0 //let the whole PR panel stretch by resizing the right side of the reviewers panel
-        reviewersPanel = ReviewersPanel(ArrayList(pr.reviewers), imagesSource, awtExecutor)
-        add(reviewersPanel, c)
-        border = UIUtil.getTextFieldBorder()
-        maximumSize = Dimension(Integer.MAX_VALUE, 160)
+    companion object {
+        const val LEFT_RIGHT_INSET = 7
+        const val TOP_BOTTOM_INSET = 10
     }
 
-    open fun addApproveButton(buttonSize: Dimension) {
-        approveBtn.preferredSize = buttonSize
-        approveBtn.addActionListener {
-            Model.approve(pr, Consumer { approved ->
+    init {
+        this.prLink = this.createPrLinkLabel(this.pr)
+        this.targetBranchLabel = JBLabel("To: ${this.pr.toBranch}")
+        val dateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)
+        val updatedAt = this.pr.updatedAt.toLocalDateTime().format(dateTimeFormatter)
+        this.authorLabel = JBLabel("By: ${this.pr.author.user.displayName} - #${this.pr.id}, last updated $updatedAt")
+        this.reviewersPanel = ReviewersPanel(ArrayList(this.pr.reviewers), imagesSource, awtExecutor)
+
+        this.createApproveButton()
+        this.checkoutBtn.addActionListener { Model.checkout(this.pr) }
+
+        this.border = UIUtil.getTextFieldBorder()
+
+        this.layout = GridBagLayout()
+        val gbc = GridBagConstraints()
+        gbc.insets.left = LEFT_RIGHT_INSET
+        gbc.insets.right = LEFT_RIGHT_INSET
+        gbc.insets.top = TOP_BOTTOM_INSET
+        gbc.insets.bottom = TOP_BOTTOM_INSET / 2
+
+        gbc.gridx = 0
+        gbc.gridy = 0
+        gbc.gridwidth = 3
+        gbc.weightx = 1.0
+        gbc.anchor = GridBagConstraints.WEST
+        gbc.fill = GridBagConstraints.HORIZONTAL
+
+        this.add(this.prLink, gbc)
+        gbc.gridy++
+        gbc.insets.top = 0
+        gbc.insets.bottom = 0
+
+        this.add(this.targetBranchLabel, gbc)
+        gbc.gridy++
+        this.add(this.authorLabel, gbc)
+
+        gbc.weightx = 0.5
+        gbc.gridwidth = 1
+        gbc.gridy++
+        gbc.fill = GridBagConstraints.NONE
+        gbc.insets.top = TOP_BOTTOM_INSET
+        gbc.insets.bottom = TOP_BOTTOM_INSET
+        this.add(this.checkoutBtn, gbc)
+        gbc.gridx++
+        this.add(this.approveBtn, gbc)
+
+        gbc.gridx++
+        gbc.anchor = GridBagConstraints.EAST
+        this.add(this.reviewersPanel, gbc)
+    }
+
+    private fun createPrLinkLabel(pr: PR): LinkLabel<*> {
+        val prLinkLabel = LinkLabel.create(pr.title) { BrowserUtil.browse(pr.links.getSelfHref()) }
+        prLinkLabel.font = prLinkLabel.font.deriveFont(prLinkLabel.font.size * 1.4f)
+        prLinkLabel.toolTipText = "<html>${pr.title}<br>link: ${pr.links.getSelfHref()}<br><br>Open in browser</html>"
+        return prLinkLabel
+    }
+
+    open fun createApproveButton() {
+        this.approveBtn.addActionListener {
+            Model.approve(this.pr, Consumer { approved ->
                 if (approved) {
-                    approveBtn.text = "Approved"
-                    approveBtn.isEnabled = false
+                    this.approveBtn.text = "Approved"
+                    this.approveBtn.isEnabled = false
                 }
             })
         }
-        approveBtn.foreground = approveColor
-        approveBtn.font = UIUtil.getButtonFont()
-        add(approveBtn, c)
+        this.approveBtn.foreground = this.approveColor
+        this.approveBtn.font = UIUtil.getButtonFont()
     }
 
     fun currentBranchChanged(branch: String) {
-        val isActive = pr.fromBranch == branch
-        background = UIUtil.getListBackground(isActive)
-        reviewersPanel.background = background
-        setComponentsForeground(UIUtil.getListForeground(isActive))
-        title.background = UIUtil.getListBackground(isActive)
-        approveBtn.isVisible = isActive
-        checkoutBtn.isVisible = !isActive
-    }
-
-    private fun setComponentsForeground(color: Color) {
-        title.foreground = color
-        toBranch.foreground = color
-        author.foreground = color
-    }
-}
-
-class Link(url: URL, txt: String) : JButton() {
-    private val innerMargin = Insets(0, 2, 1, 0)
-
-    init {
-        text = txt
-        horizontalAlignment = SwingConstants.LEFT
-        isBorderPainted = false
-        isOpaque = false
-        isContentAreaFilled = false
-        toolTipText = url.toString()
-        cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
-        margin = innerMargin
-        isRolloverEnabled = false
-        addActionListener { BrowserUtil.browse(url) }
+        val isActive = this.pr.fromBranch == branch
+        this.background = UIUtil.getListBackground(isActive)
+        this.approveBtn.isVisible = isActive
+        this.checkoutBtn.isVisible = !isActive
     }
 }
 
@@ -137,31 +125,32 @@ class OwnPRComponent(ownPR: PR,
                      awtExecutor: Executor)
     : PRComponent(ownPR, imagesSource, awtExecutor) {
 
-    override fun addApproveButton(buttonSize: Dimension) {
+    override fun createApproveButton() {
         //Do not add an approve button for own PRs
     }
 }
 
 class ReviewersPanel(reviewers: MutableList<PRParticipant>,
                      imagesSource: MediaSource<BufferedImage>,
-                     awtExecutor: Executor) : JPanel(FlowLayout(FlowLayout.LEADING, 2, 2)) {
+                     awtExecutor: Executor) : JPanel(HorizontalLayout(5)) {
     companion object {
         const val ALWAYS_DISPLAY_REVIEWERS_COUNT = 5
     }
 
     init {
+        this.isOpaque = false
         reviewers.sortWith(Comparator { o1, o2 -> o1.status.compareTo(o2.status) })
         val labels: Map<PRParticipant, ReviewerItem> = reviewers.associateWith { prParticipant -> ReviewerItem(prParticipant) }
 
         val alwaysVisibleReviewerCount = Math.min(ALWAYS_DISPLAY_REVIEWERS_COUNT, reviewers.size)
 
-        reviewers.take(alwaysVisibleReviewerCount).forEach { add(labels[it]) }
+        reviewers.take(alwaysVisibleReviewerCount).forEach { this.add(labels[it]) }
 
         val reviewersInCombo = reviewers.size - alwaysVisibleReviewerCount
         if (reviewersInCombo > 0) {
             val otherReviewersButton = JButton("+$reviewersInCombo")
-            add(otherReviewersButton)
-            val height = preferredSize.height
+            this.add(otherReviewersButton)
+            val height = this.preferredSize.height
             otherReviewersButton.preferredSize = Dimension(height, height)
             val menu = JBPopupMenu()
             reviewers.takeLast(reviewersInCombo).forEach { prParticipant: PRParticipant ->
@@ -175,7 +164,6 @@ class ReviewersPanel(reviewers: MutableList<PRParticipant>,
                     menu.show(otherReviewersButton, e.x, e.y)
                 }
             })
-            add(menu)
         }
 
         labels.forEach { prParticipant: PRParticipant, label: ReviewerItem ->
@@ -198,18 +186,18 @@ class ReviewerItem(reviewer: PRParticipant) : JLayeredPane() {
         val avatarSize = ReviewerComponentFactory.avatarSize
         val statusIconSize = ReviewerComponentFactory.statusIconSize
         val size = avatarSize + statusIconSize / 3
-        preferredSize = Dimension(size, size)
-        avatarLabel.setBounds(0, statusIconSize / 3, avatarSize, avatarSize)
-        add(avatarLabel, AVATAR_Z_INDEX)
+        this.preferredSize = Dimension(size, size)
+        this.avatarLabel.setBounds(0, statusIconSize / 3, avatarSize, avatarSize)
+        this.add(this.avatarLabel, AVATAR_Z_INDEX)
         val statusIcon = ReviewerComponentFactory.getStatusIcon(reviewer)
         if (statusIcon != null) {
             val statusLabel = JLabel(statusIcon)
             statusLabel.setBounds(size - statusIconSize, 0, statusIconSize, statusIconSize)
-            add(statusLabel, STATUS_ICON_Z_INDEX)
+            this.add(statusLabel, STATUS_ICON_Z_INDEX)
         }
     }
 
     fun setAvatar(icon: Icon) {
-        avatarLabel.icon = icon
+        this.avatarLabel.icon = icon
     }
 }
