@@ -52,6 +52,7 @@ open class PRComponent(
         this.checkoutBtn.addActionListener { Model.checkout(this.pr) }
 
         this.border = UIUtil.getTextFieldBorder()
+        this.background = UIUtil.getListBackground(false)
 
         this.layout = GridBagLayout()
         val gbc = GridBagConstraints()
@@ -113,7 +114,8 @@ open class PRComponent(
 
     fun currentBranchChanged(branch: String) {
         val isActive = this.pr.fromBranch == branch
-        this.background = UIUtil.getListBackground(isActive)
+        this.border = if (isActive) BorderFactory.createLineBorder(UIUtil.getListSelectionBackground(), 3)
+                else UIUtil.getTextFieldBorder()
         this.approveBtn.isVisible = isActive
         this.checkoutBtn.isVisible = !isActive
     }
