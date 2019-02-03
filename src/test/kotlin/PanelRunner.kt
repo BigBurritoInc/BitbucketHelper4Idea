@@ -36,6 +36,7 @@ object PanelRunner {
         frame.contentPane.add(wrapIntoJBScroll(panel))
 
         frame.pack()
+        frame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
         frame.isVisible = true
     }
 
