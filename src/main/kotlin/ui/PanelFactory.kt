@@ -3,13 +3,13 @@ package ui
 import bitbucket.data.PR
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.ui.components.JBScrollPane
-import java.awt.image.BufferedImage
 import java.util.concurrent.Executor
+import javax.swing.Icon
 import javax.swing.JPanel
 import javax.swing.JScrollPane
 import javax.swing.ScrollPaneConstants
 
-var imagesSource: MediaSource<BufferedImage> = ImagesSource()
+var imagesSource: MediaSource<Icon> = ImagesSource()
 var awtExecutor: Executor = Executor { command -> ApplicationManager.getApplication().invokeLater(command) }
 
 fun createReviewPanel(): Panel {

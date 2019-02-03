@@ -2,34 +2,32 @@ package ui
 
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.util.concurrency.AppExecutorUtil
-import java.awt.image.BufferedImage
 import java.io.IOException
 import java.net.URL
-import java.util.concurrent.*
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ExecutorService
 import java.util.function.Supplier
 import javax.imageio.ImageIO
+import javax.swing.Icon
 
-class ImagesSource: MediaSource<BufferedImage> {
+class ImagesSource: MediaSource<Icon> {
     private val log = Logger.getInstance("ImagesSource")
 
     //The key is String, not java.net.URL, because URL's hashCode() and equals() are blocking operations
-    private val cachedImages: MutableMap<String /* url */, CompletableFuture<BufferedImage>> = ConcurrentHashMap()
+    private val cachedImages: MutableMap<String /* url */, CompletableFuture<Icon>> = ConcurrentHashMap()
     private val executor: ExecutorService = AppExecutorUtil.getAppExecutorService()
-    private val defaultAvatar = resourceImage("avatar.png")
 
-    override fun retrieve(url: URL): CompletableFuture<BufferedImage> {
+    override fun retrieve(url: URL): CompletableFuture<Icon> {
         return cachedImages.computeIfAbsent(url.toString()) {
-            CompletableFuture.supplyAsync<BufferedImage>(Supplier {
+            CompletableFuture.supplyAsync<Icon>(Supplier {
                 try {
-                    ImageIO.read(url)
+                    ReviewerComponentFactory.createIconForPrParticipant(ImageIO.read(url))
                 } catch (e: IOException) {
                     log.warn("Cannot read image by URL: $url")
-                    ImageIO.read(defaultAvatar)
+                    ReviewerComponentFactory.defaultAvatarIcon
                 }
             }, executor)
         }
     }
-
-    private fun resourceImage(relativePath: String) =
-            javaClass.classLoader.getResource(relativePath)
 }

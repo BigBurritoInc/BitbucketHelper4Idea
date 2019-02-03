@@ -1,11 +1,11 @@
+
 import bitbucket.data.*
 import ui.*
-import java.awt.image.BufferedImage
 import java.net.URL
 import java.util.*
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executor
-import javax.imageio.ImageIO
+import javax.swing.Icon
 import javax.swing.JFrame
 import javax.swing.SwingUtilities
 import kotlin.collections.HashMap
@@ -14,16 +14,15 @@ import kotlin.collections.HashSet
 object PanelRunner {
 
     val br = "feature/TOSX-1980-it-is-a-feature-that-has-a-workitem-branch"
-    val image = javaClass.classLoader.getResource("avatar.png")
 
     @JvmStatic
     fun main(args: Array<String>) {
         val frame = JFrame()
         awtExecutor = Executor { command -> SwingUtilities.invokeLater(command) }
-        imagesSource = object : MediaSource<BufferedImage> {
-            override fun retrieve(url: URL): CompletableFuture<BufferedImage> {
-                val future = CompletableFuture<BufferedImage>()
-                future.complete(ImageIO.read(image))
+        imagesSource = object : MediaSource<Icon> {
+            override fun retrieve(url: URL): CompletableFuture<Icon> {
+                val future = CompletableFuture<Icon>()
+                future.complete(ReviewerComponentFactory.defaultAvatarIcon)
                 return future
             }
         }
