@@ -1,17 +1,20 @@
 package ui
 
 import bitbucket.data.PR
+import com.intellij.ui.components.panels.VerticalLayout
 import java.awt.Component
 import javax.swing.JPanel
-import javax.swing.BoxLayout
 
 
 
 
 abstract class Panel : JPanel(), Listener {
+    companion object {
+        const val GAP_BETWEEN_PR_COMPONENTS = 5
+    }
 
     init {
-        layout = BoxLayout(this, BoxLayout.Y_AXIS)
+        layout = VerticalLayout(GAP_BETWEEN_PR_COMPONENTS)
     }
 
     fun dataUpdated(diff: Diff) {
