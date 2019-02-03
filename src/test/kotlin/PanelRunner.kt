@@ -9,6 +9,7 @@ import javax.imageio.ImageIO
 import javax.swing.JFrame
 import javax.swing.SwingUtilities
 import kotlin.collections.HashMap
+import kotlin.collections.HashSet
 
 object PanelRunner {
 
@@ -19,7 +20,7 @@ object PanelRunner {
     fun main(args: Array<String>) {
         val frame = JFrame()
         awtExecutor = Executor { command -> SwingUtilities.invokeLater(command) }
-        imagesSource = object: MediaSource<BufferedImage> {
+        imagesSource = object : MediaSource<BufferedImage> {
             override fun retrieve(url: URL): CompletableFuture<BufferedImage> {
                 val future = CompletableFuture<BufferedImage>()
                 future.complete(ImageIO.read(image))
@@ -51,15 +52,24 @@ object PanelRunner {
         for (k in 0..id % 4)
             to += "8984"
         val repo = Repository("slug", Project("project_key"))
+
+        val reviewers = HashSet<PRParticipant>()
+        for (userId in 0..8) {
+            reviewers.add(PRParticipant(
+                    User("UserName$userId", "username$userId@email.com", userId.toLong(), "FirstName$userId LastName$userId",
+                            Links(listOf(Links.Link("https://www.atlassian.com/software/bitbucket")))),
+                    userId % 2 == 0,
+                    ParticipantStatus.values()[(userId % ParticipantStatus.values().size)]
+            ))
+        }
+
         return PR(id, title,
                 PRParticipant(User("har993", "billybobharley.is.here@tdameritrade.com", 2, "Billy Bob Harley",
                         Links(listOf(Links.Link("https://developer.atlassian.com/bitbucket/api/2/reference/")))), false, ParticipantStatus.UNAPPROVED),
                 false,
                 Branch("$br$id", repo),
-                Branch(to, repo), setOf(PRParticipant(User("reviewer1", "reviewer1@mail.com", 3, "First Reviewer",
-                Links(listOf(Links.Link("https://www.atlassian.com/software/bitbucket")))), false, ParticipantStatus.NEEDS_WORK),
-                PRParticipant(User("reviewer2", "reviewer2@mail.com", 4, "Second Reviewer",
-                Links(listOf(Links.Link("https://www.atlassian.com/software/bitbucket")))), true, ParticipantStatus.APPROVED)),
+                Branch(to, repo),
+                reviewers,
                 Date(System.currentTimeMillis()), Date(System.currentTimeMillis()),
                 Links(listOf(Links.Link("https://developer.atlassian.com/bitbucket/api/2/reference/")))
         )
