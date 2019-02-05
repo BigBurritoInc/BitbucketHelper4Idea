@@ -1,8 +1,12 @@
 import com.intellij.ide.DataManager
+import com.intellij.openapi.actionSystem.ActionManager
+import com.intellij.openapi.actionSystem.ActionPlaces
 import com.intellij.openapi.actionSystem.CommonDataKeys
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.ui.playback.commands.ActionCommand
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.vcsUtil.VcsUtil
 import git4idea.GitUtil
@@ -17,6 +21,8 @@ import org.jetbrains.annotations.Nls
 
 //todo: get rid of null-checks
 object Git: VCS {
+    private val log = Logger.getInstance("Git")
+    private const val updateActionId = "Vcs.UpdateProject"
 
     override fun checkoutBranch(branch: String, listener: Runnable) {
         println("Checking out $branch")
@@ -27,7 +33,10 @@ object Git: VCS {
             val branchExists = currentRepository.branches.findBranchByName(branch) != null
             val repos = listOf(currentRepository)
             if (branchExists) {
-                branchController.checkout(branch, false, repos) { listener.run() }
+                branchController.checkout(branch, false, repos) {
+                    listener.run()
+                    updateProject()
+                }
             } else {
                 AsyncFetchAndCheckout(currentProject, "MyBitbucket: Fetching", GitRepositoryAction.getGitRoots(
                         currentProject, GitVcs.getInstance(currentProject))!!, currentRepository, branch, listener)
@@ -35,7 +44,18 @@ object Git: VCS {
             }
 
         } else {
-            println("prj or repo is null $currentProject $currentRepository")
+            log.warn("prj or repo is null $currentProject $currentRepository")
+        }
+    }
+
+    override fun updateProject() {
+        val updateAction = ActionManager.getInstance().getAction(updateActionId)
+        if (updateAction != null) {
+            ActionManager.getInstance().tryToExecute(
+                    updateAction, ActionCommand.getInputEvent(updateActionId), null,
+                    ActionPlaces.UNKNOWN, false)
+        } else {
+            log.warn("Cannot find action by id: $updateActionId")
         }
     }
 
@@ -82,7 +102,6 @@ internal class AsyncFetchAndCheckout(project: Project?, @Nls title: String, var 
                 gitRoots), null, true)
 
         val branchController = GitBrancher.getInstance(myProject)
-        branchController.checkout(branch, false, listOf(repo)) { /* empty callback */ }
-        listener.run()
+        branchController.checkout(branch, false, listOf(repo)) { listener.run() }
     }
 }
