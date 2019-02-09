@@ -29,8 +29,8 @@ object PanelRunner {
         }
         val panel = createReviewPanel()
         val map = HashMap<Long, PR>()
-        for (i in 1..20) {
-            map[i.toLong()] = createPR(i.toLong())
+        for (i in 0..20) {
+            map[i.toLong()] = createPR(i.toLong(), i % 10)
         }
         panel.dataUpdated(Diff(map, emptyMap(), emptyMap()))
         panel.currentBranchChanged("feature/TOSX-1980-it-is-a-feature-that-has-a-workitem-branch3")
@@ -41,7 +41,7 @@ object PanelRunner {
         frame.isVisible = true
     }
 
-    fun createPR(id: Long): PR {
+    fun createPR(id: Long, reviewersCount: Int): PR {
         var title = "This is a pull request submitted by a programmer here with # $id"
         for (p in 0..id % 3)
             title += " more info"
@@ -54,13 +54,15 @@ object PanelRunner {
         val repo = Repository("slug", Project("project_key"))
 
         val reviewers = HashSet<PRParticipant>()
-        for (userId in 0..8) {
-            reviewers.add(PRParticipant(
-                    User("UserName$userId", "username$userId@email.com", userId.toLong(), "FirstName$userId LastName$userId",
-                            Links(listOf(Links.Link("https://www.atlassian.com/software/bitbucket")))),
-                    userId % 2 == 0,
-                    ParticipantStatus.values()[(userId % ParticipantStatus.values().size)]
-            ))
+        if (reviewersCount != 0) {
+            for (userId in 0..reviewersCount) {
+                reviewers.add(PRParticipant(
+                        User("UserName$userId", "username$userId@email.com", userId.toLong(), "FirstName$userId LastName$userId",
+                                Links(listOf(Links.Link("https://www.atlassian.com/software/bitbucket")))),
+                        userId % 2 == 0,
+                        ParticipantStatus.values()[(userId % ParticipantStatus.values().size)]
+                ))
+            }
         }
 
         return PR(id, title,

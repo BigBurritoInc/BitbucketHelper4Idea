@@ -144,7 +144,10 @@ class ReviewersPanel(reviewers: MutableList<PRParticipant>,
         reviewers.sortWith(Comparator { o1, o2 -> o1.status.compareTo(o2.status) })
         val labels: Map<PRParticipant, ReviewerItem> = reviewers.associateWith { prParticipant -> ReviewerItem(prParticipant) }
 
-        val alwaysVisibleReviewerCount = Math.min(ALWAYS_DISPLAY_REVIEWERS_COUNT, reviewers.size)
+        val alwaysVisibleReviewerCount = if (reviewers.size == ALWAYS_DISPLAY_REVIEWERS_COUNT + 1)
+            reviewers.size
+        else
+            Math.min(ALWAYS_DISPLAY_REVIEWERS_COUNT, reviewers.size)
 
         reviewers.take(alwaysVisibleReviewerCount).forEach { this.add(labels[it]) }
 
