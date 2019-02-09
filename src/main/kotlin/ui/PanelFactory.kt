@@ -7,6 +7,7 @@ import java.awt.image.BufferedImage
 import java.util.concurrent.Executor
 import javax.swing.JPanel
 import javax.swing.JScrollPane
+import javax.swing.ScrollPaneConstants
 
 var imagesSource: MediaSource<BufferedImage> = ImagesSource()
 var awtExecutor: Executor = Executor { command -> ApplicationManager.getApplication().invokeLater(command) }
@@ -40,14 +41,8 @@ fun createOwnPanel(): Panel {
 }
 
 fun wrapIntoJBScroll(panel: JPanel): JScrollPane {
-    val scroll = JBScrollPane(panel)
-    scroll.verticalScrollBar.unitIncrement = 14
-    return scroll
-}
-
-
-fun wrapIntoScroll(panel: JPanel): JScrollPane {
-    val scroll = JScrollPane(panel)
+    val scroll = JBScrollPane(panel, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
+            ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER)
     scroll.verticalScrollBar.unitIncrement = 14
     return scroll
 }
