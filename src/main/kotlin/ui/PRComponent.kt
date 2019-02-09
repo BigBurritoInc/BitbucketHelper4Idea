@@ -11,7 +11,6 @@ import com.intellij.util.ui.UIUtil
 import java.awt.*
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
-import java.awt.image.BufferedImage
 import java.net.URL
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -23,7 +22,7 @@ import javax.swing.*
 
 open class PRComponent(
         val pr: PR,
-        imagesSource: MediaSource<BufferedImage>,
+        imagesSource: MediaSource<Icon>,
         awtExecutor: Executor) : JPanel() {
 
     private val approveColor = Color(89, 168, 105)
@@ -123,7 +122,7 @@ open class PRComponent(
 
 /** A pull-request where an author is yourself */
 class OwnPRComponent(ownPR: PR,
-                     imagesSource: MediaSource<BufferedImage>,
+                     imagesSource: MediaSource<Icon>,
                      awtExecutor: Executor)
     : PRComponent(ownPR, imagesSource, awtExecutor) {
 
@@ -133,7 +132,7 @@ class OwnPRComponent(ownPR: PR,
 }
 
 class ReviewersPanel(reviewers: MutableList<PRParticipant>,
-                     imagesSource: MediaSource<BufferedImage>,
+                     imagesSource: MediaSource<Icon>,
                      awtExecutor: Executor) : JPanel(HorizontalLayout(5)) {
     companion object {
         const val ALWAYS_DISPLAY_REVIEWERS_COUNT = 5
@@ -177,7 +176,6 @@ class ReviewersPanel(reviewers: MutableList<PRParticipant>,
 
         labels.forEach { prParticipant: PRParticipant, label: ReviewerItem ->
             imagesSource.retrieve(URL(prParticipant.user.links.getIconHref()))
-                    .thenApply { image -> ReviewerComponentFactory.createIconForPrParticipant(image) }
                     .thenAcceptAsync(Consumer { icon -> label.setAvatar(icon) }, awtExecutor)
         }
     }
