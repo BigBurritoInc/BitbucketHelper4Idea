@@ -29,10 +29,24 @@ object Model {
             val diff = own.createDiff(prs)
             if (diff.hasAnyUpdates()) {
                 own = own.createNew(prs)
-                ApplicationManager.getApplication().invokeLater{ ownUpdated(diff) }
+                invokeLater { ownUpdated(diff) }
             }
+            notifyMergeStatusChanged(diff)
         }
         branchChanged()
+    }
+
+    private fun notifyMergeStatusChanged(diff: Diff) {
+        if (diff.mergeStatusChanged.isNotEmpty()) {
+            val availableForMerge = diff.mergeStatusChanged.filter { it.value.mergeStatus.canMerge }
+            if (availableForMerge.size == 1) {
+                val title = availableForMerge.values.first().title
+                showNotification("Your pull request can be merged: $title")
+            } else {
+                showNotification("${availableForMerge.size} pull requests can be merged")
+            }
+            invokeLater { ownUpdated(Diff(emptyMap(), diff.mergeStatusChanged, emptyMap())) }
+        }
     }
 
     fun updateReviewingPRs(prs: List<PR>) {
@@ -48,7 +62,7 @@ object Model {
     }
 
     private fun notifyNewPR(diff: Diff) {
-        ApplicationManager.getApplication().invokeLater{
+        invokeLater {
             if (diff.added.isNotEmpty()) {
                 val message = if (diff.added.size == 1) {
                     val pr = diff.added.values.iterator().next()
@@ -77,7 +91,7 @@ object Model {
         AppExecutorUtil.getAppScheduledExecutorService().execute {
             try {
                 BitbucketClientFactory.createClient().approve(pr)
-                showNotification("PR #${pr.id} is approved")
+                showNotification("PR ${pr.title} is approved")
                 ApplicationManager.getApplication().invokeLater {
                     callback.accept(true)
                 }
@@ -88,15 +102,32 @@ object Model {
         }
     }
 
+    fun merge(pr: PR, callback: Consumer<Boolean>) {
+        AppExecutorUtil.getAppScheduledExecutorService().execute {
+            try {
+                val newPRState = BitbucketClientFactory.createClient().merge(pr)
+                if (newPRState != pr) {
+                    showNotification("PR ${pr.title} is merged")
+                    ApplicationManager.getApplication().invokeLater {
+                        callback.accept(true)
+                    }
+                }
+            } catch (e: Exception) {
+                //todo: handle
+                print(e)
+            }
+        }
+    }
+
     fun showNotification(message: String, type: NotificationType = NotificationType.INFORMATION) {
-        ApplicationManager.getApplication().invokeLater{
+        invokeLater {
             val notification = notificationGroup.createNotification(message, type)
             Notifications.Bus.notify(notification, Git.currentProject())
         }
     }
 
     private fun branchChanged() {
-        ApplicationManager.getApplication().invokeLater {
+        invokeLater {
             listeners.forEach{ it.currentBranchChanged(currentBranch()) }
         }
     }
@@ -107,5 +138,9 @@ object Model {
 
     fun addListener(listener: Listener) {
         listeners.add(listener)
+    }
+
+    private fun invokeLater(r: () -> Unit) {
+        ApplicationManager.getApplication().invokeLater(r)
     }
 }

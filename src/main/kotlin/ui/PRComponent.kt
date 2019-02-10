@@ -25,10 +25,11 @@ open class PRComponent(
         imagesSource: MediaSource<Icon>,
         awtExecutor: Executor) : JPanel() {
 
-    private val approveColor = Color(89, 168, 105)
+    val greenColor = Color(89, 168, 105)
 
     private val checkoutBtn = JButton("▼ Checkout")
-    private val approveBtn = JButton("Approve")
+    val approveBtn = JButton("Approve")
+    val mergeBtn = JButton("Merge")
     private val prLink: JLabel
     private val targetBranchLabel: JLabel
     private val authorLabel: JBLabel
@@ -46,8 +47,10 @@ open class PRComponent(
         val updatedAt = this.pr.updatedAt.toLocalDateTime().format(dateTimeFormatter)
         this.authorLabel = JBLabel("By: ${this.pr.author.user.displayName} - #${this.pr.id}, last updated $updatedAt")
         this.reviewersPanel = ReviewersPanel(ArrayList(this.pr.reviewers), imagesSource, awtExecutor)
+        this.mergeBtn.isVisible = false
+        this.approveBtn.isVisible = false
 
-        this.createApproveButton()
+        this.createComponentSpecificButton()
         this.checkoutBtn.addActionListener { Model.checkout(this.pr) }
 
         this.border = UIUtil.getTextFieldBorder()
@@ -62,7 +65,7 @@ open class PRComponent(
 
         gbc.gridx = 0
         gbc.gridy = 0
-        gbc.gridwidth = 3
+        gbc.gridwidth = 4
         gbc.weightx = 1.0
         gbc.anchor = GridBagConstraints.WEST
         gbc.fill = GridBagConstraints.HORIZONTAL
@@ -76,7 +79,7 @@ open class PRComponent(
         gbc.gridy++
         this.add(this.authorLabel, gbc)
 
-        gbc.weightx = 0.5
+        gbc.weightx = 0.0
         gbc.gridwidth = 1
         gbc.gridy++
         gbc.fill = GridBagConstraints.NONE
@@ -85,8 +88,12 @@ open class PRComponent(
         this.add(this.checkoutBtn, gbc)
         gbc.gridx++
         this.add(this.approveBtn, gbc)
+        gbc.gridx++
+        gbc.anchor = GridBagConstraints.WEST
+        this.add(this.mergeBtn, gbc)
 
         gbc.gridx++
+        gbc.weightx = 1.0
         gbc.anchor = GridBagConstraints.EAST
         this.add(this.reviewersPanel, gbc)
     }
@@ -98,7 +105,7 @@ open class PRComponent(
         return prLinkLabel
     }
 
-    open fun createApproveButton() {
+    open fun createComponentSpecificButton() {
         this.approveBtn.addActionListener {
             Model.approve(this.pr, Consumer { approved ->
                 if (approved) {
@@ -107,11 +114,12 @@ open class PRComponent(
                 }
             })
         }
-        this.approveBtn.foreground = this.approveColor
+        this.approveBtn.foreground = this.greenColor
         this.approveBtn.font = UIUtil.getButtonFont()
+        this.approveBtn.isVisible = true
     }
 
-    fun currentBranchChanged(branch: String) {
+    open fun currentBranchChanged(branch: String) {
         val isActive = this.pr.fromBranch == branch
         this.border = if (isActive) BorderFactory.createLineBorder(UIUtil.getListSelectionBackground(), 3)
                 else UIUtil.getTextFieldBorder()
@@ -126,8 +134,28 @@ class OwnPRComponent(ownPR: PR,
                      awtExecutor: Executor)
     : PRComponent(ownPR, imagesSource, awtExecutor) {
 
-    override fun createApproveButton() {
-        //Do not add an approve button for own PRs
+    override fun createComponentSpecificButton() {
+        this.mergeBtn.isVisible = true
+        this.mergeBtn.isEnabled = pr.mergeStatus.canMerge
+        if (!pr.mergeStatus.canMerge) {
+            this.mergeBtn.toolTipText = pr.mergeStatus.vetoesSummaries()
+        } else {
+            this.mergeBtn.addActionListener {
+                Model.merge(this.pr, Consumer { approved ->
+                    if (approved) {
+                        this.mergeBtn.text = "Merged"
+                        this.mergeBtn.isEnabled = false
+                    }
+                })
+            }
+        }
+        this.mergeBtn.foreground = this.greenColor
+        this.mergeBtn.font = UIUtil.getButtonFont()
+    }
+
+    override fun currentBranchChanged(branch: String) {
+        super.currentBranchChanged(branch)
+        this.approveBtn.isVisible = false
     }
 }
 

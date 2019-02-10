@@ -4,6 +4,8 @@ import bitbucket.data.Approve
 import bitbucket.data.PR
 import bitbucket.data.PagedResponse
 import bitbucket.data.SimpleUser
+import bitbucket.data.merge.MergeStatus
+import bitbucket.data.merge.Veto
 import bitbucket.httpparams.*
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectReader
@@ -27,8 +29,12 @@ class BitbucketClient(
         private val listener: ClientListener
     ) {
     private val log = Logger.getInstance("BitbucketClient")
-    private val responseHandler = HttpResponseHandler(
+    private val mergeStatusResponseHandler = HttpResponseHandler(
+            objReader, object : TypeReference<MergeStatus>() {}, listener)
+    private val pagedResponseHandler = HttpResponseHandler(
             objReader, object : TypeReference<PagedResponse<PR>>() {}, listener)
+    private val pullRequestResponseHandler = HttpResponseHandler(
+            objReader, object : TypeReference<PR>() {}, listener)
 
     fun reviewedPRs(): List<PR> {
         return inbox(Role.REVIEWER)
@@ -55,6 +61,17 @@ class BitbucketClient(
         }
     }
 
+    fun merge(pr: PR): PR {
+        return try {
+            val urlBuilder = mergeUrl(pr)
+            val request = httpRequestFactory.createPost(urlBuilder.toUrlString())
+            sendRequest(request, pullRequestResponseHandler)
+        } catch (e: Exception) {
+            listener.requestFailed(e)
+            pr
+        }
+    }
+
     /**
      * Calls /rest/api/1.0/inbox/pull-requests
      * @see <a href="https://docs.atlassian.com/bitbucket-server/rest/5.13.0/bitbucket-rest.html#idm46209336621072">inbox</a>
@@ -70,6 +87,25 @@ class BitbucketClient(
             listener.requestFailed(e)
             emptyList()
         }
+    }
+
+    fun retrieveMergeStatus(pr: PR): MergeStatus {
+        return try {
+            val urlBuilder = mergeUrl(pr)
+            val request = httpRequestFactory.createGet(urlBuilder.toUrlString())
+            val mergeStatus = sendRequest(request, mergeStatusResponseHandler)
+            mergeStatus.unknown = false
+            mergeStatus
+        } catch (e: Exception) {
+            listener.requestFailed(e)
+            MergeStatus(false, false, listOf(Veto("Request Error", "")))
+        }
+    }
+
+    private fun mergeUrl(pr: PR): UrlBuilder {
+        return urlBuilder().pathSegments(
+                "projects", settings.project, "repos", settings.slug, "pull-requests", pr.id.toString(), "merge")
+                .queryParam("version", pr.version.toString())
     }
 
     private fun filterByProject(prs: List<PR>): List<PR> {
@@ -95,11 +131,12 @@ class BitbucketClient(
             param.apply(urlBuilder)
     }
 
-    private fun sendRequest(request : HttpUriRequest ) = responseHandler.handle(httpClient.execute(request))
+    private fun <T> sendRequest(request : HttpUriRequest, responseHandler: HttpResponseHandler<T>) =
+            responseHandler.handle(httpClient.execute(request))
 
     private fun replayPageRequest(request: HttpUriRequest, replay: (Int) -> List<PR>): List<PR> {
         try {
-            val pagedResponse = sendRequest(request)
+            val pagedResponse = sendRequest(request, pagedResponseHandler)
             val prs = ArrayList(pagedResponse.values)
             if (!pagedResponse.isLastPage)
                 prs.addAll(replay.invoke(pagedResponse.nextPageStart))

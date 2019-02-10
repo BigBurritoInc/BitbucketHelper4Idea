@@ -31,7 +31,7 @@ object PanelRunner {
         for (i in 0..20) {
             map[i.toLong()] = createPR(i.toLong(), i % 10)
         }
-        panel.dataUpdated(Diff(map, emptyMap(), emptyMap()))
+        panel.dataUpdated(Diff(map, emptyMap(), emptyMap(), emptyMap()))
         panel.currentBranchChanged("feature/TOSX-1980-it-is-a-feature-that-has-a-workitem-branch3")
         frame.contentPane.add(wrapIntoJBScroll(panel))
 
@@ -72,7 +72,7 @@ object PanelRunner {
                 Branch(to, repo),
                 reviewers,
                 Date(System.currentTimeMillis()), Date(System.currentTimeMillis()),
-                Links(listOf(Links.Link("https://developer.atlassian.com/bitbucket/api/2/reference/")))
+                Links(listOf(Links.Link("https://developer.atlassian.com/bitbucket/api/2/reference/"))),0
         )
     }
 }
