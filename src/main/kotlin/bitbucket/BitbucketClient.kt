@@ -51,7 +51,6 @@ class BitbucketClient(
                     "projects", settings.project, "repos", settings.slug, "pull-requests", pr.id.toString(), "participants", settings.login)
             println(urlBuilder.toUrlString())
             val request = httpRequestFactory.createPut(urlBuilder.toUrlString())
-            request.setHeader("Content-Type", "application/json")
             val body = objWriter.writeValueAsBytes(Approve(SimpleUser(settings.login)))
             val entity = ByteArrayEntity(body)
             request.entity = entity

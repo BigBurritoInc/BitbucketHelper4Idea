@@ -35,6 +35,10 @@ class HttpResponseHandler<T>(
             log.debug("Status code received: $statusCode")
             return when (statusCode) {
                 HttpStatus.SC_OK -> mapper.invoke(response.entity.content)
+                HttpStatus.SC_FORBIDDEN -> {
+                    listener.actionForbidden()
+                    mapper.invoke(response.entity.content)
+                }
                 HttpStatus.SC_UNAUTHORIZED -> {
                     listener.invalidCredentials()
                     throw UnauthorizedException

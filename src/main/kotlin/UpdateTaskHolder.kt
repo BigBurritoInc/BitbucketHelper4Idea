@@ -107,6 +107,11 @@ object UpdateTaskHolder {
 
         }
 
+        override fun actionForbidden() {
+            Model.showNotification("Action you are trying to perform is forbidden by Bitbucket",
+                    NotificationType.WARNING)
+        }
+
         override fun requestFailed(e: Exception) {
             log.error("Request failed", e)
             Model.showNotification(
