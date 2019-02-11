@@ -16,11 +16,8 @@ import java.util.function.Consumer
 object Model {
     private val log = Logger.getInstance("Model")
     private val vcs: VCS = Git
-    private val initOwnState = PRState()
-    private val initReviewingState = PRState()
-
-    private var own: PRState = initOwnState
-    private var reviewing: PRState = initReviewingState
+    private var own: PRState = PRState()
+    private var reviewing: PRState = PRState()
     private val listeners: MutableList<Listener> = ArrayList()
     val notificationGroup = NotificationGroup("MyBitbucket group",
             NotificationDisplayType.BALLOON, true)
@@ -30,7 +27,7 @@ object Model {
             val diff = own.createDiff(prs)
             if (diff.hasAnyUpdates()) {
                 own = own.createNew(prs)
-                invokeLater { ownUpdated(diff) }
+                invokeLater { ownUpdated(diff); }
             }
             notifyMergeStatusChanged(diff)
         }
@@ -77,11 +74,17 @@ object Model {
     }
 
     private fun reviewingUpdated(diff: Diff) {
-        listeners.forEach{ it.reviewedUpdated(diff) }
+        listeners.forEach{
+            it.reviewedUpdated(diff);
+            it.reviewedCountChanged(reviewing.size())
+        }
     }
 
     private fun ownUpdated(diff: Diff) {
-        listeners.forEach{ it.ownUpdated(diff) }
+        listeners.forEach{
+            it.ownUpdated(diff);
+            it.ownCountChanged(own.size())
+        }
     }
 
     fun checkout(pr: PR) {

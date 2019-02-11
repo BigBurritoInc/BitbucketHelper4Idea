@@ -17,7 +17,7 @@ import javax.swing.*
 
 class MainWindow : ToolWindowFactory, DumbAware {
 
-    var window: ToolWindow? = null
+    private var window: ToolWindow? = null
 
     override fun createToolWindowContent(prj: Project, window: ToolWindow) {
         this.window = window
@@ -25,9 +25,18 @@ class MainWindow : ToolWindowFactory, DumbAware {
         val reviewingPanel = createReviewPanel()
         val ownPanel = createOwnPanel()
 
-        val reviewingContent = addTab(cm, wrapIntoJBScroll(reviewingPanel), "Reviewing")
-        addTab(cm, wrapIntoJBScroll(ownPanel), "Created")
+        val reviewingContent = addTab(cm, wrapIntoJBScroll(reviewingPanel), "Reviewing (0)")
+        val ownContent = addTab(cm, wrapIntoJBScroll(ownPanel), "Created (0)")
         val loginContent = addTab(cm, createLoginPanel(cm, reviewingContent), "Login")
+        Model.addListener(object: Listener {
+            override fun ownCountChanged(count: Int) {
+                ownContent.displayName = "Created ($count)"
+            }
+
+            override fun reviewedCountChanged(count: Int) {
+                reviewingContent.displayName = "Reviewing ($count)"
+            }
+        })
         cm.setSelectedContent(loginContent)
 
         Model.addListener(reviewingPanel)

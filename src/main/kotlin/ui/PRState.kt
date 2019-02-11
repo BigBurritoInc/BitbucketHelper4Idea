@@ -17,4 +17,6 @@ class PRState(private val prsMap: Map<Long, PR> = HashMap()) {
     fun createNew(prs: List<PR>): PRState {
         return PRState(prs.map { it.id to it }.toMap())
     }
+
+    fun size() = prsMap.size
 }
