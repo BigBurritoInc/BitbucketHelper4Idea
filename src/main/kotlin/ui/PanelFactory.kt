@@ -18,8 +18,6 @@ fun createReviewPanel(): Panel {
             return PRComponent(pr, imagesSource, awtExecutor)
         }
 
-        override fun ownUpdated(diff: Diff) {}
-
         override fun reviewedUpdated(diff: Diff) {
             dataUpdated(diff)
         }
@@ -35,8 +33,6 @@ fun createOwnPanel(): Panel {
         override fun ownUpdated(diff: Diff) {
             dataUpdated(diff)
         }
-
-        override fun reviewedUpdated(diff: Diff) {}
     }
 }
 

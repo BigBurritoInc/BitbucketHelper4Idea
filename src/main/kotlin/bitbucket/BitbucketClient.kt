@@ -57,6 +57,7 @@ class BitbucketClient(
             HttpResponseHandler.handle(httpClient.execute(request))
         } catch (e: Exception) {
             listener.requestFailed(e)
+            throw e
         }
     }
 
