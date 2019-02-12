@@ -13,12 +13,14 @@ class HttpAuthRequestFactory(private val user: String, private val password: Str
     fun createPost(url: String): HttpPost {
         val request = HttpPost(url)
         addAuthHeader(request)
+        addContentTypeHeader(request)
         return request
     }
 
     fun createPut(url: String): HttpPut {
         val request = HttpPut(url)
         addAuthHeader(request)
+        addContentTypeHeader(request)
         return request
     }
     fun createGet(url: String): HttpGet {
@@ -35,5 +37,9 @@ class HttpAuthRequestFactory(private val user: String, private val password: Str
     private fun authString(): String {
         val authArray = ("$user:$password").toByteArray(StandardCharsets.UTF_8)
         return Base64.getEncoder().encodeToString(authArray)
+    }
+
+    private fun addContentTypeHeader(request: HttpMessage) {
+        request.setHeader("Content-Type", "application/json")
     }
 }

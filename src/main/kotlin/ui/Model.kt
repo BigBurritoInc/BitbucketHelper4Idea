@@ -8,12 +8,13 @@ import com.intellij.notification.NotificationDisplayType
 import com.intellij.notification.NotificationGroup
 import com.intellij.notification.NotificationType
 import com.intellij.notification.Notifications
-import com.intellij.openapi.application.ApplicationManager
-import com.intellij.util.concurrency.AppExecutorUtil
+import com.intellij.openapi.diagnostic.Logger
+import util.doInAppExecutor
+import util.invokeLater
 import java.util.function.Consumer
 
-
 object Model {
+    private val log = Logger.getInstance("Model")
     private val vcs: VCS = Git
     private val initOwnState = PRState()
     private val initReviewingState = PRState()
@@ -29,10 +30,24 @@ object Model {
             val diff = own.createDiff(prs)
             if (diff.hasAnyUpdates()) {
                 own = own.createNew(prs)
-                ApplicationManager.getApplication().invokeLater{ ownUpdated(diff) }
+                invokeLater { ownUpdated(diff) }
             }
+            notifyMergeStatusChanged(diff)
         }
         branchChanged()
+    }
+
+    private fun notifyMergeStatusChanged(diff: Diff) {
+        if (diff.mergeStatusChanged.isNotEmpty()) {
+            val availableForMerge = diff.mergeStatusChanged.filter { it.value.mergeStatus.canMerge }
+            if (availableForMerge.size == 1) {
+                val title = availableForMerge.values.first().title
+                showNotification("Your pull request can be merged: $title")
+            } else if (availableForMerge.size > 1) {
+                showNotification("${availableForMerge.size} pull requests can be merged")
+            }
+            invokeLater { ownUpdated(Diff(emptyMap(), diff.mergeStatusChanged, emptyMap())) }
+        }
     }
 
     fun updateReviewingPRs(prs: List<PR>) {
@@ -41,14 +56,14 @@ object Model {
             if (diff.hasAnyUpdates()) {
                 notifyNewPR(diff)
                 reviewing = reviewing.createNew(prs)
-                ApplicationManager.getApplication().invokeLater{ reviewingUpdated(diff) }
+                invokeLater { reviewingUpdated(diff) }
             }
         }
         branchChanged()
     }
 
     private fun notifyNewPR(diff: Diff) {
-        ApplicationManager.getApplication().invokeLater{
+        invokeLater {
             if (diff.added.isNotEmpty()) {
                 val message = if (diff.added.size == 1) {
                     val pr = diff.added.values.iterator().next()
@@ -74,30 +89,41 @@ object Model {
     }
 
     fun approve(pr: PR, callback: Consumer<Boolean>) {
-        AppExecutorUtil.getAppScheduledExecutorService().execute {
+        doInAppExecutor {
             try {
                 BitbucketClientFactory.createClient().approve(pr)
-                showNotification("PR #${pr.id} is approved")
-                ApplicationManager.getApplication().invokeLater {
-                    callback.accept(true)
+                showNotification("PR ${pr.title} is approved")
+                invokeLater { callback.accept(true) }
+            } catch (e: Exception) {
+                log.warn(e)
+            }
+        }
+    }
+
+    fun merge(pr: PR, callback: Consumer<Boolean>) {
+        doInAppExecutor {
+            try {
+                val newPRState = BitbucketClientFactory.createClient().merge(pr)
+                if (newPRState.closed) {
+                    showNotification("PR ${pr.title} is merged")
+                    invokeLater { callback.accept(true) }
                 }
             } catch (e: Exception) {
-                //todo: handle
-                print(e)
+                log.warn(e)
             }
         }
     }
 
     fun showNotification(message: String, type: NotificationType = NotificationType.INFORMATION) {
-        ApplicationManager.getApplication().invokeLater{
+        invokeLater {
             val notification = notificationGroup.createNotification(message, type)
             Notifications.Bus.notify(notification, Git.currentProject())
         }
     }
 
     private fun branchChanged() {
-        ApplicationManager.getApplication().invokeLater {
-            listeners.forEach{ it.currentBranchChanged(currentBranch()) }
+        invokeLater {
+            listeners.forEach { it.currentBranchChanged(currentBranch()) }
         }
     }
 

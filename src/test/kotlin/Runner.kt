@@ -25,6 +25,10 @@ object Runner {
                         println("invalidCredentials")
                     }
 
+                    override fun actionForbidden() {
+                        println("Forbidden")
+                    }
+
                     override fun requestFailed(e: Exception) {
                         println("requestFailed: $e")
                     }

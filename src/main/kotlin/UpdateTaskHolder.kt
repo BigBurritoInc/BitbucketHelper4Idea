@@ -49,7 +49,10 @@ object UpdateTaskHolder {
             try {
                 log.debug("Running UpdateTask...")
                 Model.updateReviewingPRs(client.reviewedPRs())
-                Model.updateOwnPRs(client.ownPRs())
+                val ownPRs = client.ownPRs()
+                //If user has too many open pull request, we will not retrieve merge status for every of them
+                ownPRs.subList(0, Math.min(ownPRs.size, 20)).forEach { it.mergeStatus = client.retrieveMergeStatus(it) }
+                Model.updateOwnPRs(ownPRs)
             } catch (e: HttpResponseHandler.UnauthorizedException) {
                 println("UnauthorizedException")
                 cancel()
@@ -102,6 +105,11 @@ object UpdateTaskHolder {
             Model.showNotification("Invalid BitBucket credentials! \n" +
                     "Or it could be required to enter captcha in the web-interface.", NotificationType.WARNING)
 
+        }
+
+        override fun actionForbidden() {
+            Model.showNotification("Action you are trying to perform is forbidden by Bitbucket",
+                    NotificationType.WARNING)
         }
 
         override fun requestFailed(e: Exception) {
