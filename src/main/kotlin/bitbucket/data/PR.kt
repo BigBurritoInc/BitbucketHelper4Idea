@@ -16,6 +16,7 @@ data class PR(@JsonProperty("id") val id: Long,
               @JsonProperty("reviewers") val reviewers: Set<PRParticipant>,
               @JsonProperty("createdDate") private val createdDate: Date,
               @JsonProperty("updatedDate") private val updatedDate: Date,
+              @JsonProperty("properties") private val properties: PRProperties,
               @JsonProperty("links") val links: Links,
               @JsonProperty("version") val version: Int
 ) {
@@ -40,10 +41,7 @@ data class PR(@JsonProperty("id") val id: Long,
     val updatedAt: ZonedDateTime
         get() = ZonedDateTime.ofInstant(updatedDate.toInstant(), ZoneId.of("UTC"))
 
-    fun isApprovedBy(username: String): Boolean {
-        val iterator = reviewers.filter { it.user.name == username }.iterator()
-        if (iterator.hasNext())
-            return iterator.next().approved
-        return false
-    }
+    val commentCount: Int
+        get() = properties.commentCount
+
 }

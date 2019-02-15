@@ -45,7 +45,9 @@ open class PRComponent(
         this.targetBranchLabel = JBLabel("To: ${this.pr.toBranch}")
         val dateTimeFormatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)
         val updatedAt = this.pr.updatedAt.toLocalDateTime().format(dateTimeFormatter)
-        this.authorLabel = JBLabel("By: ${this.pr.author.user.displayName} - #${this.pr.id}, last updated $updatedAt")
+        val commentsCount = "${this.pr.commentCount} " + if (this.pr.commentCount == 1) { "comment" } else { "comments" }
+        this.authorLabel = JBLabel("By: ${this.pr.author.user.displayName} - #${this.pr.id} ($commentsCount) "
+                                 + "last updated $updatedAt")
         this.reviewersPanel = ReviewersPanel(ArrayList(this.pr.reviewers), imagesSource, awtExecutor)
         this.mergeBtn.isVisible = false
         this.approveBtn.isVisible = false
