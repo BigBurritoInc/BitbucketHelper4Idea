@@ -51,7 +51,7 @@ object PanelRunner {
         for (k in 0..id % 4)
             to += "8984"
         val repo = Repository("slug", Project("project_key"))
-
+        val props = PRProperties(1)
         val reviewers = HashSet<PRParticipant>()
         if (reviewersCount != 0) {
             for (userId in 0..reviewersCount) {
@@ -72,6 +72,7 @@ object PanelRunner {
                 Branch(to, repo),
                 reviewers,
                 Date(System.currentTimeMillis()), Date(System.currentTimeMillis()),
+                props,
                 Links(listOf(Links.Link("https://developer.atlassian.com/bitbucket/api/2/reference/"))),0
         )
     }
