@@ -7,9 +7,11 @@ import com.intellij.util.concurrency.AppExecutorUtil
 import http.HttpResponseHandler
 import ui.Model
 import java.io.IOException
+import java.net.UnknownHostException
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
+import javax.net.ssl.SSLHandshakeException
 
 object UpdateTaskHolder {
     private val log = Logger.getInstance(UpdateTaskHolder::class.java)
@@ -114,9 +116,13 @@ object UpdateTaskHolder {
 
         override fun requestFailed(e: Exception) {
             log.error("Request failed", e)
-            Model.showNotification(
-                    "Request to BitBucket failed, it may be unreachable or the settings are incorrect",
-                    NotificationType.ERROR)
+            val message = when (e) {
+                is UnknownHostException -> "BitBucket host can't be reached. Check url settings."
+                is SSLHandshakeException -> "SSL handshake with BitBucket server failed. Details: " + e.message
+                else -> "Request to BitBucket failed, it may be unreachable or the settings are incorrect." +
+                        " Details: " + e.message
+            }
+            Model.showNotification(message, NotificationType.ERROR)
             val errors = errorCounter.incrementAndGet()
             if (errors > 5) {
                 task.cancel()
