@@ -4,7 +4,7 @@ plugins {
 }
 
 group 'BigBurritoInc'
-version '0.1.1'
+version '0.2'
 
 repositories {
     mavenCentral()
@@ -33,6 +33,7 @@ intellij {
 }
 patchPluginXml {
     changeNotes """
-      v.0.1.1 2019.01.25 Minor bug fixes
+      v.0.2 New visual interface, pull requests' merging, automatic git pull after branch checkout \n 
+      v.0.1.1 2019.01.25 Minor bug fixes \n
       v.0.1: 2019.01.21 First public version is released"""
 }

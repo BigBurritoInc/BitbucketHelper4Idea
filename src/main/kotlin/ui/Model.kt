@@ -108,6 +108,7 @@ object Model {
             try {
                 val newPRState = BitbucketClientFactory.createClient().merge(pr)
                 if (newPRState.closed) {
+                    own = own.update(listOf(newPRState))
                     showNotification("PR ${pr.title} is merged")
                     invokeLater { callback.accept(true) }
                 }
