@@ -28,7 +28,9 @@ class BitbucketHelperConfigurable : SearchableConfigurable, Configurable.NoScrol
         return projectField.text != settings.project ||
                 slugField.text != settings.slug ||
                 urlField.text != settings.url ||
-                loginField.text != settings.login
+                loginField.text != settings.login ||
+                accessTokenField.text != settings.accessToken ||
+                useAccessTokenCheckbox.isEnabled != settings.useAccessTokenAuth
     }
 
     override fun getId(): String {
@@ -45,6 +47,8 @@ class BitbucketHelperConfigurable : SearchableConfigurable, Configurable.NoScrol
         newSettings.slug = slugField.text
         newSettings.url = urlField.text
         newSettings.login = loginField.text
+        newSettings.accessToken = accessTokenField.text
+        newSettings.useAccessTokenAuth = useAccessTokenCheckbox.isEnabled
         newSettings.validate()
         settings.copyFrom(newSettings)
         UpdateTaskHolder.reschedule()
@@ -54,6 +58,8 @@ class BitbucketHelperConfigurable : SearchableConfigurable, Configurable.NoScrol
     private val slugField = JTextField()
     private val urlField = JTextField()
     private val loginField = JTextField()
+    private val useAccessTokenCheckbox = JCheckBox()
+    private val accessTokenField = JTextField()
 
     override fun createComponent(): JComponent? {
         val project = CommonDataKeys.PROJECT.getData(DataManager.getInstance().getDataContext()) ?: return JLabel("Empty project!")
@@ -88,7 +94,12 @@ class BitbucketHelperConfigurable : SearchableConfigurable, Configurable.NoScrol
         mainPanel.add(urlField, gbc)
         gbc.gridy++
         mainPanel.add(loginField, gbc)
-
+        gbc.gridy++
+        mainPanel.add(useAccessTokenCheckbox, gbc)
+        gbc.gridy++
+        mainPanel.add(accessTokenField, gbc)
+        accessTokenField.isVisible = useAccessTokenCheckbox.isEnabled
+        useAccessTokenCheckbox.addActionListener { accessTokenField.isVisible = useAccessTokenCheckbox.isEnabled }
         val wrapper = JPanel(BorderLayout())
         wrapper.add(mainPanel, BorderLayout.NORTH)
         return wrapper
@@ -99,21 +110,30 @@ class BitbucketHelperConfigurable : SearchableConfigurable, Configurable.NoScrol
         slugField.text = settings.slug
         urlField.text = settings.url
         loginField.text = settings.login
+        accessTokenField.text = settings.accessToken
+        useAccessTokenCheckbox.isEnabled = settings.useAccessTokenAuth
     }
 }
 
-data class Settings(var project: String = "", var slug: String = "", var login: String = "", var url: String = "") {
+data class Settings(var project: String = "", var slug: String = "", var login: String = "", var url: String = "",
+                    var useAccessTokenAuth: Boolean = false, var accessToken: String = "") {
 
     fun copyFrom(other: Settings) {
         project = other.project
         slug = other.slug
         login = other.login
         url = other.url
+        accessToken = other.accessToken
+        useAccessTokenAuth = other.useAccessTokenAuth
     }
 
     fun validate() {
         if (project.isBlank() || slug.isBlank() || login.isBlank() || url.isBlank())
             throw ConfigurationException("Fill all the BitBucket settings", "Some settings are blank")
+        if (useAccessTokenAuth && accessToken.isBlank()) {
+            throw ConfigurationException(
+                    "You have chosen Access token auth, a token needs to be specified", "Access Token is blank")
+        }
         try {
             URL(url)
         } catch (e: MalformedURLException) {

@@ -2,7 +2,7 @@ package bitbucket
 
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
-import http.HttpAuthRequestFactory
+import http.BasicAuthRequestFactory
 import org.apache.http.client.HttpClient
 import org.apache.http.impl.client.HttpClients
 import ui.getStorerService
@@ -19,7 +19,7 @@ object BitbucketClientFactory {
 
         return BitbucketClient(
                 createHttpClient(),
-                HttpAuthRequestFactory(settings.login, String(password)),
+                BasicAuthRequestFactory(settings.login, String(password)),
                 settings, objectMapper.reader(), objectMapper.writer(), listener)
     }
 
