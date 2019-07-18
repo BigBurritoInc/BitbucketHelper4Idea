@@ -9,6 +9,7 @@ import com.intellij.ui.components.panels.VerticalLayout
 import com.intellij.ui.content.Content
 import com.intellij.ui.content.ContentManager
 import ui.*
+import util.invokeLater
 import java.awt.*
 import java.awt.event.KeyEvent
 import java.awt.event.KeyListener
@@ -28,6 +29,7 @@ class MainWindow : ToolWindowFactory, DumbAware {
         val reviewingContent = addTab(cm, wrapIntoJBScroll(reviewingPanel), "Reviewing (0)")
         val ownContent = addTab(cm, wrapIntoJBScroll(ownPanel), "Created (0)")
         val loginContent = addTab(cm, createLoginPanel(cm, reviewingContent), "Login")
+
         Model.addListener(object: Listener {
             override fun ownCountChanged(count: Int) {
                 ownContent.displayName = "Created ($count)"
@@ -41,6 +43,18 @@ class MainWindow : ToolWindowFactory, DumbAware {
 
         Model.addListener(reviewingPanel)
         Model.addListener(ownPanel)
+        runUpdateTaskLater()
+    }
+
+    private fun runUpdateTaskLater() {
+        //This has to be invoked after the MainWindow is constructed,
+        //otherwise StorerService is not available at the moment, so we use invokeLater
+        invokeLater {
+            if (getStorerService().settings.useAccessTokenAuth) {
+                getStorerService().settings.validate()
+                UpdateTaskHolder.scheduleNew()
+            }
+        }
     }
 
     private fun createLoginPanel(contentManager: ContentManager, reviewingContent: Content): JPanel {

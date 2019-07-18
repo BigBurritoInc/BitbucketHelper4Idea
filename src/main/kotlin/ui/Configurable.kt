@@ -6,6 +6,7 @@ import com.intellij.openapi.components.*
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.options.ConfigurationException
 import com.intellij.openapi.options.SearchableConfigurable
+import com.intellij.ui.components.JBCheckBox
 import java.awt.BorderLayout
 import javax.swing.*
 
@@ -58,7 +59,7 @@ class BitbucketHelperConfigurable : SearchableConfigurable, Configurable.NoScrol
     private val slugField = JTextField()
     private val urlField = JTextField()
     private val loginField = JTextField()
-    private val useAccessTokenCheckbox = JCheckBox()
+    private val useAccessTokenCheckbox = JBCheckBox("Use Access Token")
     private val accessTokenField = JTextField()
 
     override fun createComponent(): JComponent? {
@@ -97,9 +98,9 @@ class BitbucketHelperConfigurable : SearchableConfigurable, Configurable.NoScrol
         gbc.gridy++
         mainPanel.add(useAccessTokenCheckbox, gbc)
         gbc.gridy++
+        useAccessTokenCheckbox.addChangeListener { accessTokenField.isVisible = useAccessTokenCheckbox.isSelected }
+        accessTokenField.isVisible = false
         mainPanel.add(accessTokenField, gbc)
-        accessTokenField.isVisible = useAccessTokenCheckbox.isEnabled
-        useAccessTokenCheckbox.addActionListener { accessTokenField.isVisible = useAccessTokenCheckbox.isEnabled }
         val wrapper = JPanel(BorderLayout())
         wrapper.add(mainPanel, BorderLayout.NORTH)
         return wrapper
@@ -111,7 +112,7 @@ class BitbucketHelperConfigurable : SearchableConfigurable, Configurable.NoScrol
         urlField.text = settings.url
         loginField.text = settings.login
         accessTokenField.text = settings.accessToken
-        useAccessTokenCheckbox.isEnabled = settings.useAccessTokenAuth
+        useAccessTokenCheckbox.isSelected = settings.useAccessTokenAuth
     }
 }
 
@@ -132,7 +133,7 @@ data class Settings(var project: String = "", var slug: String = "", var login: 
             throw ConfigurationException("Fill all the BitBucket settings", "Some settings are blank")
         if (useAccessTokenAuth && accessToken.isBlank()) {
             throw ConfigurationException(
-                    "You have chosen Access token auth, a token needs to be specified", "Access Token is blank")
+                    "You have chosen Access Token auth, a token needs to be specified", "Access Token is blank")
         }
         try {
             URL(url)
