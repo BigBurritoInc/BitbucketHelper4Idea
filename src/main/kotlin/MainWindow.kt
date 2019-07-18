@@ -47,8 +47,8 @@ class MainWindow : ToolWindowFactory, DumbAware {
     }
 
     private fun runUpdateTaskLater() {
-        //This has to be invoked after the MainWindow is constructed,
-        //otherwise StorerService is not available at the moment, so we use invokeLater
+        //This piece of code has to be invoked after the MainWindow is constructed, so we use invokeLater
+        //(StorerService is not available at the moment of window's construction)
         invokeLater {
             if (getStorerService().settings.useAccessTokenAuth) {
                 getStorerService().settings.validate()

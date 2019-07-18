@@ -31,7 +31,7 @@ class BitbucketHelperConfigurable : SearchableConfigurable, Configurable.NoScrol
                 urlField.text != settings.url ||
                 loginField.text != settings.login ||
                 accessTokenField.text != settings.accessToken ||
-                useAccessTokenCheckbox.isEnabled != settings.useAccessTokenAuth
+                useAccessTokenCheckbox.isSelected != settings.useAccessTokenAuth
     }
 
     override fun getId(): String {
@@ -49,10 +49,17 @@ class BitbucketHelperConfigurable : SearchableConfigurable, Configurable.NoScrol
         newSettings.url = urlField.text
         newSettings.login = loginField.text
         newSettings.accessToken = accessTokenField.text
-        newSettings.useAccessTokenAuth = useAccessTokenCheckbox.isEnabled
+        newSettings.useAccessTokenAuth = useAccessTokenCheckbox.isSelected
         newSettings.validate()
         settings.copyFrom(newSettings)
-        UpdateTaskHolder.reschedule()
+        if (newSettings.useAccessTokenAuth) {
+            //We can start an update task right away, no other info (e.g. login, password) is needed from user
+            UpdateTaskHolder.scheduleNew()
+        } else {
+            //If password was already entered, we recreate a task to reflect the changes that were just made in settings
+            //Otherwise we will wait until user enters a password
+            UpdateTaskHolder.reschedule()
+        }
     }
 
     private val projectField = JTextField()
@@ -82,7 +89,8 @@ class BitbucketHelperConfigurable : SearchableConfigurable, Configurable.NoScrol
         gbc.gridy++
         mainPanel.add(JLabel("Bitbucket URL"), gbc)
         gbc.gridy++
-        mainPanel.add(JLabel("Login"), gbc)
+        val loginLabel = JLabel("Login")
+        mainPanel.add(loginLabel, gbc)
 
         gbc.gridy = 0
         gbc.gridx = 1
@@ -98,7 +106,11 @@ class BitbucketHelperConfigurable : SearchableConfigurable, Configurable.NoScrol
         gbc.gridy++
         mainPanel.add(useAccessTokenCheckbox, gbc)
         gbc.gridy++
-        useAccessTokenCheckbox.addChangeListener { accessTokenField.isVisible = useAccessTokenCheckbox.isSelected }
+        useAccessTokenCheckbox.addChangeListener {
+            accessTokenField.isVisible = useAccessTokenCheckbox.isSelected
+            loginLabel.isVisible = !useAccessTokenCheckbox.isSelected
+            loginField.isVisible = !useAccessTokenCheckbox.isSelected
+        }
         accessTokenField.isVisible = false
         mainPanel.add(accessTokenField, gbc)
         val wrapper = JPanel(BorderLayout())
@@ -129,11 +141,14 @@ data class Settings(var project: String = "", var slug: String = "", var login: 
     }
 
     fun validate() {
-        if (project.isBlank() || slug.isBlank() || login.isBlank() || url.isBlank())
+        if (project.isBlank() || slug.isBlank() || url.isBlank())
             throw ConfigurationException("Fill all the BitBucket settings", "Some settings are blank")
         if (useAccessTokenAuth && accessToken.isBlank()) {
             throw ConfigurationException(
                     "You have chosen Access Token auth, a token needs to be specified", "Access Token is blank")
+        }
+        if (!useAccessTokenAuth && login.isBlank()) {
+            throw ConfigurationException("Login field is empty")
         }
         try {
             URL(url)
