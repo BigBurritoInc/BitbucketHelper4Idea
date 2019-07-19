@@ -26,6 +26,13 @@ object UpdateTaskHolder {
         createAndRun { task.createNew(it) }
     }
 
+    fun stop() {
+        synchronized(lock) {
+            task.cancel()
+            task = DummyTask()
+        }
+    }
+
     private fun createAndRun(factory: (BitbucketClient) -> CancellableTask) {
         synchronized(lock) {
             //this lock is needed to make task initialization atomic

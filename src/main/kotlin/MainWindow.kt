@@ -8,6 +8,7 @@ import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.panels.VerticalLayout
 import com.intellij.ui.content.Content
 import com.intellij.ui.content.ContentManager
+import com.intellij.ui.content.impl.TabbedContentImpl
 import ui.*
 import util.invokeLater
 import java.awt.*
@@ -19,6 +20,11 @@ import javax.swing.*
 class MainWindow : ToolWindowFactory, DumbAware {
 
     private var window: ToolWindow? = null
+    private var loginContent: Content = createDummyContent()
+    private var reviewingContent: Content = createDummyContent()
+    private var ownContent: Content = createDummyContent()
+
+    private fun createDummyContent() = TabbedContentImpl(JLabel(), "", false, "")
 
     override fun createToolWindowContent(prj: Project, window: ToolWindow) {
         this.window = window
@@ -26,9 +32,10 @@ class MainWindow : ToolWindowFactory, DumbAware {
         val reviewingPanel = createReviewPanel()
         val ownPanel = createOwnPanel()
 
-        val reviewingContent = addTab(cm, wrapIntoJBScroll(reviewingPanel), "Reviewing (0)")
-        val ownContent = addTab(cm, wrapIntoJBScroll(ownPanel), "Created (0)")
-        val loginContent = addTab(cm, createLoginPanel(cm, reviewingContent), "Login")
+        reviewingContent = addTab(cm, wrapIntoJBScroll(reviewingPanel), "Reviewing (0)")
+        ownContent = addTab(cm, wrapIntoJBScroll(ownPanel), "Created (0)")
+        val loginPanel = createLoginPanel(cm, reviewingContent)
+        loginContent = addTab(cm, loginPanel, "Login")
 
         Model.addListener(object: Listener {
             override fun ownCountChanged(count: Int) {
@@ -52,6 +59,7 @@ class MainWindow : ToolWindowFactory, DumbAware {
         invokeLater {
             if (getStorerService().settings.useAccessTokenAuth) {
                 getStorerService().settings.validate()
+                window!!.contentManager.setSelectedContent(reviewingContent)
                 UpdateTaskHolder.scheduleNew()
             }
         }

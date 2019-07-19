@@ -43,6 +43,7 @@ class BitbucketHelperConfigurable : SearchableConfigurable, Configurable.NoScrol
     }
 
     override fun apply() {
+        val wasAccessTokenAuthUsed = settings.useAccessTokenAuth
         val newSettings = Settings()
         newSettings.project = projectField.text
         newSettings.slug = slugField.text
@@ -52,13 +53,18 @@ class BitbucketHelperConfigurable : SearchableConfigurable, Configurable.NoScrol
         newSettings.useAccessTokenAuth = useAccessTokenCheckbox.isSelected
         newSettings.validate()
         settings.copyFrom(newSettings)
-        if (newSettings.useAccessTokenAuth) {
-            //We can start an update task right away, no other info (e.g. login, password) is needed from user
-            UpdateTaskHolder.scheduleNew()
-        } else {
-            //If password was already entered, we recreate a task to reflect the changes that were just made in settings
-            //Otherwise we will wait until user enters a password
-            UpdateTaskHolder.reschedule()
+        when {
+            newSettings.useAccessTokenAuth ->
+                //We can start an update task right away, no other info (e.g. login, password) is needed from user.
+                UpdateTaskHolder.scheduleNew()
+            !newSettings.useAccessTokenAuth && wasAccessTokenAuthUsed ->
+                //If user has just disabled access token auth we stop the update task and wait until user enters
+                //a password in a separate window.
+                UpdateTaskHolder.stop()
+            else -> // Basic login/password auth was used before and is still used.
+                //If password was already entered, we recreate a task to reflect the changes that were
+                //just made in settings. Otherwise we will wait until user enters a password.
+                UpdateTaskHolder.reschedule()
         }
     }
 
