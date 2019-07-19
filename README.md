@@ -12,7 +12,8 @@ The plugin supports two types of authentication: **Access Token auth** (requires
 ##### Access Token Auth
 If you are a happy user of Bitbucket Server version 5.5 or newer, you can use this convenient type of authentication.
 To generate a personal access token from within Bitbucket Server go to _Manage account > Account settings > Personal access tokens._
-Once a token is generated copy it to myBitbucket Settings. After you hit OK, plugin should show your pull requests.
+Create a token with a **Write** permission to be able to approve and merge pull requests from the plugin.
+Copy it to the myBitbucket Settings window. After you hit OK, plugin should show your pull requests.
 
 ##### Basic Auth with login and password
 For older versions you need to specify your Bibucket Server login in the Settings window and enter a password
