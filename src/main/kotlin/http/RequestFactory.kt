@@ -1,14 +1,11 @@
 package http
 
-import org.apache.http.HttpHeaders
 import org.apache.http.HttpMessage
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.client.methods.HttpPut
-import java.nio.charset.StandardCharsets
-import java.util.*
 
-class HttpAuthRequestFactory(private val user: String, private val password: String) {
+abstract class RequestFactory {
 
     fun createPost(url: String): HttpPost {
         val request = HttpPost(url)
@@ -29,15 +26,7 @@ class HttpAuthRequestFactory(private val user: String, private val password: Str
         return request
     }
 
-    private fun addAuthHeader(request: HttpMessage) {
-        val authHeader = "Basic " + authString()
-        request.setHeader(HttpHeaders.AUTHORIZATION, authHeader)
-    }
-
-    private fun authString(): String {
-        val authArray = ("$user:$password").toByteArray(StandardCharsets.UTF_8)
-        return Base64.getEncoder().encodeToString(authArray)
-    }
+    abstract fun addAuthHeader(request: HttpMessage);
 
     private fun addContentTypeHeader(request: HttpMessage) {
         request.setHeader("Content-Type", "application/json")
