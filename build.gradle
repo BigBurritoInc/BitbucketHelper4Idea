@@ -4,7 +4,7 @@ plugins {
 }
 
 group 'BigBurritoInc'
-version '0.3'
+version '0.4'
 
 repositories {
     mavenCentral()
@@ -33,6 +33,6 @@ intellij {
 }
 patchPluginXml {
     changeNotes """
-      v.0.3 Added authentication with Bitbucket access token and support of SSL certificate management
+      v.0.4 Fixed parsing error when user email is empty
     """
 }
