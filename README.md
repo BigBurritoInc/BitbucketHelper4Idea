@@ -1,4 +1,6 @@
 # myBitbucket
+[![Downloads][plugin-downloads-svg]][plugin-repo]
+[![Version][plugin-version-svg]][plugin-repo]
 
 This plugin for Intellij IDEA allows you to see and approve pull-requests assigned to you in Bitbucket Server. The plugin is integrated with Git to allow checking out corresponding branches.
 
@@ -32,3 +34,7 @@ Was tested using IDEA 2017.X, 2018.X and Bitbucket Server v.4.9.1.
 
 ## Reporting an issue
 If you find any issue, please report it to [GitHub](https://github.com/BigBurritoInc/BitbucketHelper4Idea/issues) or [email us](mailto:bitbucket.plugin@gmail.com)
+
+[plugin-repo]: https://plugins.jetbrains.com/plugin/11577-mybitbucket
+[plugin-downloads-svg]: http://img.shields.io/jetbrains/plugin/d/11577
+[plugin-version-svg]: https://img.shields.io/jetbrains/plugin/v/11577?label=version
